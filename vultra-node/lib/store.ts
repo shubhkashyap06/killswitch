@@ -1,7 +1,15 @@
 import { create } from "zustand";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 export type SystemStatus = "NORMAL" | "FROZEN";
 export type TxType = "DEPOSIT" | "WITHDRAW" | "ATTACK" | "UNFREEZE";
+export type AttackType =
+  | "LARGE_WITHDRAW"
+  | "RAPID_TX"
+  | "MULTI_WALLET"
+  | "FLASH";
+export type AlertLevel = "INFO" | "WARNING" | "CRITICAL";
 
 export interface Transaction {
   id: string;
@@ -10,6 +18,23 @@ export interface Transaction {
   timestamp: Date;
   status: "SUCCESS" | "BLOCKED" | "ATTACK";
   note?: string;
+}
+
+export interface AlertItem {
+  id: string;
+  level: AlertLevel;
+  message: string;
+  timestamp: Date;
+}
+
+export interface AttackLog {
+  id: string;
+  attackType: AttackType;
+  label: string;
+  impact: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  threatDelta: number;
+  timestamp: Date;
+  result: string;
 }
 
 export interface LiquidityPoint {
@@ -25,47 +50,71 @@ export interface TxActivityPoint {
   attacks: number;
 }
 
+// ─── Store Interface ───────────────────────────────────────────────────────────
+
 export interface VultraStore {
-  // Wallet
+  /* Wallet */
   walletAddress: string | null;
   isConnected: boolean;
   connectWallet: () => void;
   disconnectWallet: () => void;
 
-  // System state
+  /* System */
   systemStatus: SystemStatus;
-  alertMessage: string;
-  
-  // Liquidity
+  isFrozen: boolean; // convenience alias always in sync with systemStatus
+  threatScore: number; // 0–100
+  alertMessage: string; // legacy single alert (kept for backward compat)
+
+  /* Liquidity */
   totalLiquidity: number;
   availableLiquidity: number;
   frozenLiquidity: number;
+  userBalance: number;
 
-  // Actions
-  deposit: (amount: number) => void;
-  withdraw: (amount: number) => boolean;
-  simulateAttack: () => void;
-  unfreeze: () => void;
-
-  // Transactions
+  /* Collections */
   transactions: Transaction[];
+  alerts: AlertItem[];
+  attackLogs: AttackLog[];
 
-  // Chart data
+  /* Charts */
   liquidityHistory: LiquidityPoint[];
   txActivity: TxActivityPoint[];
 
-  // Vesting
+  /* Vesting */
   vestingProgress: number;
   vestingTotal: number;
   vestingUnlocked: number;
+
+  /* Actions — defender */
+  deposit: (amount: number) => void;
+  withdraw: (amount: number) => boolean;
+  unfreeze: () => void;
+
+  /* Actions — system */
+  freezeSystem: (reason?: string) => void;
+  unfreezeSystem: () => void;
+  increaseThreat: (score: number, reason?: string) => void;
+  resetThreatGradually: () => void;
+
+  /* Actions — attacker */
+  simulateAttack: (type?: AttackType) => void;
 }
 
-const generateTimeLabel = () => {
-  const now = new Date();
-  return `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}`;
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const ts = () => {
+  const d = new Date();
+  return `${d.getHours().toString().padStart(2, "0")}:${d
+    .getMinutes()
+    .toString()
+    .padStart(2, "0")}:${d.getSeconds().toString().padStart(2, "0")}`;
 };
 
+const uid = () => `id_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+
 const MOCK_WALLET = "0x71C...d3f9";
+
+// ─── Initial data ──────────────────────────────────────────────────────────────
 
 const initialLiquidityHistory: LiquidityPoint[] = [
   { time: "09:00", liquidity: 15000, locked: 2000 },
@@ -87,27 +136,74 @@ const initialTxActivity: TxActivityPoint[] = [
   { time: "12:00", deposits: 7, withdrawals: 3, attacks: 0 },
 ];
 
+const initialAlerts: AlertItem[] = [
+  {
+    id: uid(),
+    level: "INFO",
+    message: "No suspicious activity detected.",
+    timestamp: new Date(Date.now() - 1000 * 60 * 5),
+  },
+];
+
+const attackMeta: Record<
+  AttackType,
+  { label: string; impact: AttackLog["impact"]; threat: number; result: string }
+> = {
+  LARGE_WITHDRAW: {
+    label: "Large Withdrawal Attack",
+    impact: "HIGH",
+    threat: 50,
+    result: "Attempted to drain 85% of liquidity pool",
+  },
+  RAPID_TX: {
+    label: "Rapid Transaction Flood",
+    impact: "MEDIUM",
+    threat: 30,
+    result: "Spammed 47 micro-withdrawals in 3 seconds",
+  },
+  MULTI_WALLET: {
+    label: "Multi-Wallet Drain",
+    impact: "HIGH",
+    threat: 40,
+    result: "Coordinated drain from 12 wallets simultaneously",
+  },
+  FLASH: {
+    label: "Flash Attack",
+    impact: "CRITICAL",
+    threat: 100,
+    result: "Flash loan exploit — instant pool drain attempt",
+  },
+};
+
+// ─── Store ─────────────────────────────────────────────────────────────────────
+
+// NOTE: In production, this detection layer runs as a Node.js monitoring
+// engine that connects via WebSocket RPC (Ethers.js), listens to on-chain
+// events (Transfer, Swap, Borrow), and calls smart contract freeze()
+// if threat heuristics exceed the configured threshold.
+
+let gradualResetTimer: ReturnType<typeof setInterval> | null = null;
+
 export const useVultraStore = create<VultraStore>((set, get) => ({
-  // Wallet
+  /* ── Wallet ── */
   walletAddress: null,
   isConnected: false,
-  connectWallet: () => {
-    set({ walletAddress: MOCK_WALLET, isConnected: true });
-  },
-  disconnectWallet: () => {
-    set({ walletAddress: null, isConnected: false });
-  },
+  connectWallet: () => set({ walletAddress: MOCK_WALLET, isConnected: true }),
+  disconnectWallet: () => set({ walletAddress: null, isConnected: false }),
 
-  // System state
+  /* ── System ── */
   systemStatus: "NORMAL",
+  isFrozen: false,
+  threatScore: 0,
   alertMessage: "No suspicious activity detected.",
 
-  // Liquidity
+  /* ── Liquidity ── */
   totalLiquidity: 22800,
   availableLiquidity: 17800,
   frozenLiquidity: 5000,
+  userBalance: 8500,
 
-  // Transactions
+  /* ── Collections ── */
   transactions: [
     {
       id: "tx001",
@@ -134,27 +230,168 @@ export const useVultraStore = create<VultraStore>((set, get) => ({
       note: "ETH deposited",
     },
   ],
+  alerts: initialAlerts,
+  attackLogs: [],
 
+  /* ── Charts ── */
   liquidityHistory: initialLiquidityHistory,
   txActivity: initialTxActivity,
 
-  // Vesting
+  /* ── Vesting ── */
   vestingProgress: 42,
   vestingTotal: 100000,
   vestingUnlocked: 42000,
 
-  // Actions
+  // ──────────────────────────────────────────────────────────────────────────
+  // SYSTEM ACTIONS
+  // ──────────────────────────────────────────────────────────────────────────
+
+  freezeSystem: (reason = "Threat threshold exceeded") => {
+    const { totalLiquidity, liquidityHistory, txActivity, transactions, alerts } = get();
+    const label = ts();
+
+    const newLiqHistory: LiquidityPoint[] = [
+      ...liquidityHistory.slice(-11),
+      { time: label, liquidity: totalLiquidity, locked: totalLiquidity },
+    ];
+    const lastTx = txActivity[txActivity.length - 1];
+    const newTxActivity: TxActivityPoint[] = [
+      ...txActivity.slice(-11),
+      { time: label, deposits: 0, withdrawals: 0, attacks: (lastTx?.attacks || 0) + 1 },
+    ];
+
+    const newAlert: AlertItem = {
+      id: uid(),
+      level: "CRITICAL",
+      message: `🚨 CIRCUIT BREAKER TRIGGERED — ${reason}`,
+      timestamp: new Date(),
+    };
+
+    const freezeTx: Transaction = {
+      id: uid(),
+      type: "ATTACK",
+      timestamp: new Date(),
+      status: "ATTACK",
+      note: `System frozen — ${reason}`,
+    };
+
+    set({
+      systemStatus: "FROZEN",
+      isFrozen: true,
+      threatScore: Math.min(get().threatScore, 100),
+      alertMessage: `🚨 CIRCUIT BREAKER TRIGGERED — ${reason}`,
+      frozenLiquidity: totalLiquidity,
+      availableLiquidity: 0,
+      liquidityHistory: newLiqHistory,
+      txActivity: newTxActivity,
+      transactions: [freezeTx, ...transactions].slice(0, 30),
+      alerts: [newAlert, ...alerts].slice(0, 20),
+    });
+  },
+
+  unfreezeSystem: () => {
+    const { totalLiquidity, liquidityHistory, txActivity, transactions, alerts } = get();
+    const label = ts();
+
+    const newLiqHistory: LiquidityPoint[] = [
+      ...liquidityHistory.slice(-11),
+      { time: label, liquidity: totalLiquidity, locked: 0 },
+    ];
+    const lastTx = txActivity[txActivity.length - 1];
+    const newTxActivity: TxActivityPoint[] = [
+      ...txActivity.slice(-11),
+      { time: label, deposits: 0, withdrawals: 0, attacks: 0 },
+    ];
+
+    const newAlert: AlertItem = {
+      id: uid(),
+      level: "INFO",
+      message: "✅ System unfrozen by admin. All operations resumed.",
+      timestamp: new Date(),
+    };
+
+    const unfreezeTx: Transaction = {
+      id: uid(),
+      type: "UNFREEZE",
+      timestamp: new Date(),
+      status: "SUCCESS",
+      note: "Admin unfreeze — system restored to NORMAL",
+    };
+
+    set({
+      systemStatus: "NORMAL",
+      isFrozen: false,
+      alertMessage: "✅ System unfrozen by admin. All operations resumed.",
+      availableLiquidity: totalLiquidity,
+      frozenLiquidity: 0,
+      liquidityHistory: newLiqHistory,
+      txActivity: newTxActivity,
+      transactions: [unfreezeTx, ...transactions].slice(0, 30),
+      alerts: [newAlert, ...alerts].slice(0, 20),
+    });
+
+    get().resetThreatGradually();
+  },
+
+  increaseThreat: (score: number, reason = "Suspicious activity") => {
+    const current = get().threatScore;
+    const next = Math.min(current + score, 100);
+    const alerts = get().alerts;
+
+    const level: AlertLevel = next >= 70 ? "CRITICAL" : next >= 40 ? "WARNING" : "INFO";
+    const newAlert: AlertItem = {
+      id: uid(),
+      level,
+      message:
+        level === "CRITICAL"
+          ? `⚠ Suspicious transaction detected — threat at ${next}%`
+          : level === "WARNING"
+          ? `⚠ Elevated threat level: ${next}% — monitoring intensified`
+          : `Threat indicator increased to ${next}%`,
+      timestamp: new Date(),
+    };
+
+    set({
+      threatScore: next,
+      alerts: [newAlert, ...alerts].slice(0, 20),
+    });
+
+    // Auto-freeze if threshold reached
+    if (next >= 70 && !get().isFrozen) {
+      get().freezeSystem(`Threat score ${next}% exceeded safety threshold`);
+    }
+  },
+
+  resetThreatGradually: () => {
+    if (gradualResetTimer) clearInterval(gradualResetTimer);
+    gradualResetTimer = setInterval(() => {
+      const current = get().threatScore;
+      if (current <= 0) {
+        if (gradualResetTimer) clearInterval(gradualResetTimer);
+        return;
+      }
+      set({ threatScore: Math.max(0, current - 5) });
+    }, 1200);
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // DEFENDER ACTIONS
+  // ──────────────────────────────────────────────────────────────────────────
+
   deposit: (amount: number) => {
-    const { totalLiquidity, availableLiquidity, liquidityHistory, txActivity, transactions, vestingProgress } = get();
+    const {
+      totalLiquidity, availableLiquidity, userBalance,
+      liquidityHistory, txActivity, transactions, alerts,
+      vestingProgress, vestingUnlocked, vestingTotal,
+    } = get();
     const newTotal = totalLiquidity + amount;
     const newAvail = availableLiquidity + amount;
-    const label = generateTimeLabel();
+    const label = ts();
 
     const newLiqHistory: LiquidityPoint[] = [
       ...liquidityHistory.slice(-11),
       { time: label, liquidity: newTotal, locked: newTotal - newAvail },
     ];
-
     const lastTx = txActivity[txActivity.length - 1];
     const newTxActivity: TxActivityPoint[] = [
       ...txActivity.slice(-11),
@@ -162,78 +399,82 @@ export const useVultraStore = create<VultraStore>((set, get) => ({
     ];
 
     const newTx: Transaction = {
-      id: `tx${Date.now()}`,
+      id: uid(),
       type: "DEPOSIT",
       amount,
       timestamp: new Date(),
       status: "SUCCESS",
-      note: "Liquidity deposited",
+      note: "Liquidity deposited to pool",
+    };
+    const newAlert: AlertItem = {
+      id: uid(),
+      level: "INFO",
+      message: `Deposit of $${amount.toLocaleString()} confirmed`,
+      timestamp: new Date(),
     };
 
     set({
       totalLiquidity: newTotal,
       availableLiquidity: newAvail,
+      userBalance: userBalance + amount * 0.05,
       liquidityHistory: newLiqHistory,
       txActivity: newTxActivity,
-      transactions: [newTx, ...transactions].slice(0, 20),
+      transactions: [newTx, ...transactions].slice(0, 30),
+      alerts: [newAlert, ...alerts].slice(0, 20),
       vestingProgress: Math.min(vestingProgress + 2, 100),
-      vestingUnlocked: Math.min(get().vestingUnlocked + amount * 0.1, get().vestingTotal),
+      vestingUnlocked: Math.min(vestingUnlocked + amount * 0.1, vestingTotal),
     });
   },
 
   withdraw: (amount: number): boolean => {
-    const { systemStatus, totalLiquidity, availableLiquidity, liquidityHistory, txActivity, transactions } = get();
+    const {
+      isFrozen, systemStatus, totalLiquidity, availableLiquidity,
+      liquidityHistory, txActivity, transactions, alerts,
+    } = get();
 
-    if (systemStatus === "FROZEN") {
+    if (isFrozen || systemStatus === "FROZEN") {
       const blockedTx: Transaction = {
-        id: `tx${Date.now()}`,
+        id: uid(),
         type: "WITHDRAW",
         amount,
         timestamp: new Date(),
         status: "BLOCKED",
         note: "Blocked — system frozen",
       };
-      set({ transactions: [blockedTx, ...transactions].slice(0, 20) });
+      const newAlert: AlertItem = {
+        id: uid(),
+        level: "WARNING",
+        message: `Withdrawal of $${amount.toLocaleString()} blocked — system is frozen`,
+        timestamp: new Date(),
+      };
+      set({
+        transactions: [blockedTx, ...transactions].slice(0, 30),
+        alerts: [newAlert, ...alerts].slice(0, 20),
+      });
       return false;
     }
 
     const pct = amount / totalLiquidity;
     if (pct > 0.3) {
-      // Trigger freeze
-      const label = generateTimeLabel();
-      const newLiqHistory: LiquidityPoint[] = [
-        ...liquidityHistory.slice(-11),
-        { time: label, liquidity: totalLiquidity, locked: totalLiquidity },
-      ];
-      const lastTx = txActivity[txActivity.length - 1];
-      const newTxActivity: TxActivityPoint[] = [
-        ...txActivity.slice(-11),
-        { time: label, deposits: 0, withdrawals: (lastTx?.withdrawals || 0) + 1, attacks: 1 },
-      ];
+      // Large withdrawal — increase threat (may auto-freeze)
+      get().increaseThreat(60, `Large withdrawal attempt (${(pct * 100).toFixed(1)}% of pool)`);
       const blockedTx: Transaction = {
-        id: `tx${Date.now()}`,
+        id: uid(),
         type: "WITHDRAW",
         amount,
         timestamp: new Date(),
         status: "BLOCKED",
-        note: `Large withdrawal (${(pct * 100).toFixed(1)}%) triggered freeze`,
+        note: `Large withdrawal (${(pct * 100).toFixed(1)}%) — threat escalated`,
       };
       set({
-        systemStatus: "FROZEN",
-        alertMessage: `⚠️ Suspicious withdrawal detected! ${(pct * 100).toFixed(1)}% of liquidity pool — System FROZEN.`,
-        frozenLiquidity: totalLiquidity,
-        availableLiquidity: 0,
-        liquidityHistory: newLiqHistory,
-        txActivity: newTxActivity,
-        transactions: [blockedTx, ...transactions].slice(0, 20),
+        transactions: [blockedTx, ...transactions].slice(0, 30),
       });
       return false;
     }
 
-    // Normal withdrawal
     const newAvail = availableLiquidity - amount;
     const newTotal = totalLiquidity - amount;
-    const label = generateTimeLabel();
+    const label = ts();
     const newLiqHistory: LiquidityPoint[] = [
       ...liquidityHistory.slice(-11),
       { time: label, liquidity: newTotal, locked: newTotal - newAvail },
@@ -244,81 +485,165 @@ export const useVultraStore = create<VultraStore>((set, get) => ({
       { time: label, deposits: 0, withdrawals: (lastTx?.withdrawals || 0) + 1, attacks: 0 },
     ];
     const newTx: Transaction = {
-      id: `tx${Date.now()}`,
+      id: uid(),
       type: "WITHDRAW",
       amount,
       timestamp: new Date(),
       status: "SUCCESS",
       note: "Normal withdrawal",
     };
+    const newAlert: AlertItem = {
+      id: uid(),
+      level: "INFO",
+      message: `Withdrawal of $${amount.toLocaleString()} processed successfully`,
+      timestamp: new Date(),
+    };
     set({
       totalLiquidity: newTotal,
       availableLiquidity: newAvail,
       liquidityHistory: newLiqHistory,
       txActivity: newTxActivity,
-      transactions: [newTx, ...transactions].slice(0, 20),
+      transactions: [newTx, ...transactions].slice(0, 30),
+      alerts: [newAlert, ...alerts].slice(0, 20),
     });
     return true;
   },
 
-  simulateAttack: () => {
-    const { totalLiquidity, liquidityHistory, txActivity, transactions } = get();
-    const label = generateTimeLabel();
-    const newLiqHistory: LiquidityPoint[] = [
-      ...liquidityHistory.slice(-11),
-      { time: label, liquidity: totalLiquidity, locked: totalLiquidity },
-    ];
+  // backward-compat alias used by ActionPanel
+  unfreeze: () => get().unfreezeSystem(),
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // ATTACKER ACTIONS
+  // ──────────────────────────────────────────────────────────────────────────
+
+  simulateAttack: (type: AttackType = "FLASH") => {
+    const meta = attackMeta[type];
+    const { attackLogs, totalLiquidity, liquidityHistory, txActivity, transactions, alerts } = get();
+
+    const log: AttackLog = {
+      id: uid(),
+      attackType: type,
+      label: meta.label,
+      impact: meta.impact,
+      threatDelta: meta.threat,
+      timestamp: new Date(),
+      result: meta.result,
+    };
+
+    const label = ts();
     const lastTx = txActivity[txActivity.length - 1];
     const newTxActivity: TxActivityPoint[] = [
       ...txActivity.slice(-11),
       { time: label, deposits: 0, withdrawals: 0, attacks: (lastTx?.attacks || 0) + 1 },
     ];
-    const attackTx: Transaction = {
-      id: `tx${Date.now()}`,
-      type: "ATTACK",
-      timestamp: new Date(),
-      status: "ATTACK",
-      note: "Flash loan attack simulated — system auto-frozen",
-    };
-    set({
-      systemStatus: "FROZEN",
-      alertMessage: "🚨 CRITICAL: Flash loan attack detected! Liquidity pool automatically FROZEN.",
-      frozenLiquidity: totalLiquidity,
-      availableLiquidity: 0,
-      liquidityHistory: newLiqHistory,
-      txActivity: newTxActivity,
-      transactions: [attackTx, ...transactions].slice(0, 20),
-    });
-  },
 
-  unfreeze: () => {
-    const { totalLiquidity, frozenLiquidity, liquidityHistory, txActivity, transactions } = get();
-    const label = generateTimeLabel();
-    const avail = totalLiquidity;
-    const newLiqHistory: LiquidityPoint[] = [
-      ...liquidityHistory.slice(-11),
-      { time: label, liquidity: avail, locked: 0 },
-    ];
-    const lastTx = txActivity[txActivity.length - 1];
-    const newTxActivity: TxActivityPoint[] = [
-      ...txActivity.slice(-11),
-      { time: label, deposits: 0, withdrawals: 0, attacks: 0 },
-    ];
-    const unfreezeTx: Transaction = {
-      id: `tx${Date.now()}`,
-      type: "UNFREEZE",
-      timestamp: new Date(),
-      status: "SUCCESS",
-      note: "Admin unfreeze — system restored to NORMAL",
-    };
-    set({
-      systemStatus: "NORMAL",
-      alertMessage: "✅ System unfrozen by admin. All operations resumed.",
-      availableLiquidity: avail,
-      frozenLiquidity: 0,
-      liquidityHistory: newLiqHistory,
-      txActivity: newTxActivity,
-      transactions: [unfreezeTx, ...transactions].slice(0, 20),
-    });
+    if (type === "FLASH") {
+      // Instant freeze
+      const newLiqHistory: LiquidityPoint[] = [
+        ...liquidityHistory.slice(-11),
+        { time: label, liquidity: totalLiquidity, locked: totalLiquidity },
+      ];
+      const attackTx: Transaction = {
+        id: uid(),
+        type: "ATTACK",
+        timestamp: new Date(),
+        status: "ATTACK",
+        note: `${meta.label} — ${meta.result}`,
+      };
+      set({
+        threatScore: 100,
+        attackLogs: [log, ...attackLogs].slice(0, 50),
+        txActivity: newTxActivity,
+        liquidityHistory: newLiqHistory,
+        transactions: [attackTx, ...transactions].slice(0, 30),
+      });
+      get().freezeSystem(`Flash attack — ${meta.result}`);
+    } else {
+      // Gradual threat increase
+      const attackTx: Transaction = {
+        id: uid(),
+        type: "ATTACK",
+        timestamp: new Date(),
+        status: "ATTACK",
+        note: `${meta.label} — ${meta.result}`,
+      };
+      const newLiqHistory: LiquidityPoint[] = [
+        ...liquidityHistory.slice(-11),
+        { time: label, liquidity: totalLiquidity * 0.95, locked: totalLiquidity * 0.05 },
+      ];
+      set({
+        attackLogs: [log, ...attackLogs].slice(0, 50),
+        txActivity: newTxActivity,
+        liquidityHistory: newLiqHistory,
+        transactions: [attackTx, ...transactions].slice(0, 30),
+      });
+      get().increaseThreat(meta.threat, meta.label);
+    }
   },
 }));
+
+// ─── Cross-Tab Synchronization ─────────────────────────────────────────────────
+// Allows dual portals to run in separate browser tabs and sync instantly
+
+if (typeof window !== "undefined") {
+  const channel = new BroadcastChannel("vultra_node_sync");
+  let isReceiving = false;
+
+  const broadcastState = (state: VultraStore) => {
+    // Omit functions to prevent DataCloneError
+    const {
+      walletAddress, isConnected, systemStatus, isFrozen, threatScore,
+      alertMessage, totalLiquidity, availableLiquidity, frozenLiquidity,
+      userBalance, transactions, alerts, attackLogs, liquidityHistory,
+      txActivity, vestingProgress, vestingTotal, vestingUnlocked
+    } = state;
+    
+    channel.postMessage({
+      type: "SYNC_STATE",
+      state: {
+        walletAddress, isConnected, systemStatus, isFrozen, threatScore,
+        alertMessage, totalLiquidity, availableLiquidity, frozenLiquidity,
+        userBalance, transactions, alerts, attackLogs, liquidityHistory,
+        txActivity, vestingProgress, vestingTotal, vestingUnlocked
+      }
+    });
+  };
+
+  channel.onmessage = (event) => {
+    if (event.data?.type === "REQUEST_SYNC") {
+      // A new tab opened, send it our current state
+      broadcastState(useVultraStore.getState());
+      return;
+    }
+    
+    if (event.data?.type === "SYNC_STATE") {
+      isReceiving = true;
+      const incoming = event.data.state;
+      
+      // Rehydrate Dates across the boundary
+      const txs = incoming.transactions?.map((t: any) => ({ ...t, timestamp: new Date(t.timestamp) })) || [];
+      const alts = incoming.alerts?.map((a: any) => ({ ...a, timestamp: new Date(a.timestamp) })) || [];
+      const logs = incoming.attackLogs?.map((l: any) => ({ ...l, timestamp: new Date(l.timestamp) })) || [];
+
+      useVultraStore.setState({
+        ...incoming,
+        transactions: txs,
+        alerts: alts,
+        attackLogs: logs,
+      });
+
+      // Release lock immediately after React flushes
+      setTimeout(() => { isReceiving = false; }, 50);
+    }
+  };
+
+  // Broadcast on any local action
+  useVultraStore.subscribe((state) => {
+    if (!isReceiving) {
+      broadcastState(state);
+    }
+  });
+
+  // Ask other tabs for latest state on boot
+  channel.postMessage({ type: "REQUEST_SYNC" });
+}

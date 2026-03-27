@@ -2,186 +2,132 @@
 
 import { useVultraStore } from "@/lib/store";
 import { motion } from "framer-motion";
-import { TrendingUp, Droplets, Lock, DollarSign } from "lucide-react";
+import { TrendingUp, Droplets, Lock, DollarSign, Wallet } from "lucide-react";
 
-function formatUSD(val: number) {
+function fmt(val: number) {
   if (val >= 1_000_000) return `$${(val / 1_000_000).toFixed(2)}M`;
-  if (val >= 1_000) return `$${(val / 1_000).toFixed(1)}K`;
+  if (val >= 1_000)     return `$${(val / 1_000).toFixed(1)}K`;
   return `$${val.toFixed(0)}`;
 }
-
 function pct(part: number, total: number) {
-  if (total === 0) return 0;
-  return Math.round((part / total) * 100);
+  return total === 0 ? 0 : Math.round((part / total) * 100);
 }
 
-const cards = [
-  {
-    key: "total",
-    label: "Total Liquidity Locked",
-    icon: DollarSign,
-    color: "var(--accent)",
-    glowColor: "rgba(79,110,247,0.2)",
-    getValue: (s: ReturnType<typeof useVultraStore>) => s.totalLiquidity,
-    getChange: () => "+12.4%",
-    changePositive: true,
-  },
-  {
-    key: "available",
-    label: "Available Liquidity",
-    icon: Droplets,
-    color: "var(--success)",
-    glowColor: "rgba(34,197,94,0.15)",
-    getValue: (s: ReturnType<typeof useVultraStore>) => s.availableLiquidity,
-    getChange: (s: ReturnType<typeof useVultraStore>) =>
-      `${pct(s.availableLiquidity, s.totalLiquidity)}% of pool`,
-    changePositive: true,
-  },
-  {
-    key: "frozen",
-    label: "Frozen / Locked",
-    icon: Lock,
-    color: "var(--danger)",
-    glowColor: "rgba(239,68,68,0.15)",
-    getValue: (s: ReturnType<typeof useVultraStore>) => s.frozenLiquidity,
-    getChange: (s: ReturnType<typeof useVultraStore>) =>
-      s.frozenLiquidity > 0 ? "⚠️ Protected" : "✅ Clear",
-    changePositive: false,
-  },
-  {
-    key: "health",
-    label: "Pool Health Score",
-    icon: TrendingUp,
-    color: "#f59e0b",
-    glowColor: "rgba(245,158,11,0.15)",
-    getValue: (s: ReturnType<typeof useVultraStore>) =>
-      s.systemStatus === "FROZEN" ? 34 : 91,
-    getChange: (s: ReturnType<typeof useVultraStore>) =>
-      s.systemStatus === "FROZEN" ? "Degraded" : "Excellent",
-    changePositive: true,
-    isScore: true,
-  },
-];
-
 export default function LiquidityCards() {
-  const store = useVultraStore();
+  const { totalLiquidity, availableLiquidity, frozenLiquidity, userBalance, systemStatus, threatScore } = useVultraStore();
+  const isFrozen = systemStatus === "FROZEN";
+  const healthScore = Math.max(0, 100 - threatScore);
+
+  const cards = [
+    {
+      key: "total",
+      label: "Total Liquidity",
+      icon: DollarSign,
+      color: "var(--accent)",
+      glow: "rgba(59,130,246,0.18)",
+      value: fmt(totalLiquidity),
+      sub: "+12.4% 7d",
+      subOk: true,
+    },
+    {
+      key: "available",
+      label: "Available Liquidity",
+      icon: Droplets,
+      color: "var(--success)",
+      glow: "rgba(34,197,94,0.14)",
+      value: fmt(availableLiquidity),
+      sub: `${pct(availableLiquidity, totalLiquidity)}% of pool`,
+      subOk: !isFrozen,
+    },
+    {
+      key: "frozen",
+      label: "Frozen / Locked",
+      icon: Lock,
+      color: "var(--danger)",
+      glow: "rgba(239,68,68,0.14)",
+      value: fmt(frozenLiquidity),
+      sub: frozenLiquidity > 0 ? "⚠ Active freeze" : "✅ Clear",
+      subOk: frozenLiquidity === 0,
+    },
+    {
+      key: "balance",
+      label: "Your Balance",
+      icon: Wallet,
+      color: "var(--purple)",
+      glow: "rgba(167,139,250,0.14)",
+      value: fmt(userBalance),
+      sub: "LP token value",
+      subOk: true,
+    },
+    {
+      key: "health",
+      label: "Pool Health",
+      icon: TrendingUp,
+      color: healthScore > 60 ? "var(--success)" : healthScore > 30 ? "var(--warning)" : "var(--danger)",
+      glow: healthScore > 60 ? "rgba(34,197,94,0.14)" : "rgba(239,68,68,0.14)",
+      value: `${healthScore}/100`,
+      sub: healthScore > 60 ? "Excellent" : healthScore > 30 ? "Degraded" : "Critical",
+      subOk: healthScore > 60,
+      isScore: true,
+      scoreVal: healthScore,
+    },
+  ];
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-        gap: 16,
-      }}
-    >
-      {cards.map((card, i) => {
-        const value = card.getValue(store);
-        const change =
-          typeof card.getChange === "function"
-            ? card.getChange(store)
-            : card.getChange;
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14 }}>
+      {cards.map((card, i) => (
+        <motion.div
+          key={card.key}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.07, duration: 0.4 }}
+          className="glass-card"
+          style={{ padding: 22, position: "relative", overflow: "hidden" }}
+        >
+          {/* BG glow orb */}
+          <div style={{
+            position: "absolute", top: -20, right: -20,
+            width: 80, height: 80, borderRadius: "50%",
+            background: card.glow, pointerEvents: "none",
+          }} />
 
-        return (
+          <div style={{
+            width: 38, height: 38, borderRadius: 10, marginBottom: 14,
+            background: card.glow,
+            border: `1px solid ${card.color}33`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <card.icon size={18} color={card.color} />
+          </div>
+
+          <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.09em", fontWeight: 700, marginBottom: 5 }}>
+            {card.label}
+          </div>
+
           <motion.div
-            key={card.key}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.08, duration: 0.4 }}
-            className="glass-card"
-            style={{ padding: 24, position: "relative", overflow: "hidden" }}
+            key={card.value}
+            initial={{ opacity: 0.6, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            style={{ fontSize: "1.7rem", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.02em", marginBottom: 4 }}
           >
-            {/* Background glow */}
-            <div
-              style={{
-                position: "absolute",
-                top: -30,
-                right: -30,
-                width: 100,
-                height: 100,
-                borderRadius: "50%",
-                background: card.glowColor,
-                pointerEvents: "none",
-              }}
-            />
-
-            {/* Icon */}
-            <div
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: 12,
-                background: card.glowColor,
-                border: `1px solid ${card.color}33`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 16,
-              }}
-            >
-              <card.icon size={20} color={card.color} />
-            </div>
-
-            <div
-              style={{
-                fontSize: "0.78rem",
-                color: "var(--text-muted)",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                fontWeight: 600,
-                marginBottom: 6,
-              }}
-            >
-              {card.label}
-            </div>
-
-            <div
-              style={{
-                fontSize: "1.85rem",
-                fontWeight: 800,
-                color: "var(--text-primary)",
-                letterSpacing: "-0.02em",
-                marginBottom: 6,
-              }}
-            >
-              {card.isScore ? `${value}/100` : formatUSD(value as number)}
-            </div>
-
-            <div
-              style={{
-                fontSize: "0.8rem",
-                color: card.changePositive ? "var(--success)" : "var(--danger)",
-                fontWeight: 600,
-              }}
-            >
-              {change}
-            </div>
-
-            {/* Score bar */}
-            {card.isScore && (
-              <div
-                style={{
-                  marginTop: 12,
-                  background: "var(--bg-secondary)",
-                  borderRadius: 4,
-                  height: 4,
-                  overflow: "hidden",
-                }}
-              >
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${value}%` }}
-                  transition={{ duration: 0.8, delay: i * 0.08 + 0.3 }}
-                  style={{
-                    height: "100%",
-                    background: `linear-gradient(90deg, ${card.color}, ${card.color}80)`,
-                    borderRadius: 4,
-                  }}
-                />
-              </div>
-            )}
+            {card.value}
           </motion.div>
-        );
-      })}
+
+          <div style={{ fontSize: "0.75rem", fontWeight: 600, color: card.subOk ? "var(--success)" : "var(--danger)" }}>
+            {card.sub}
+          </div>
+
+          {card.isScore && (
+            <div style={{ marginTop: 10, background: "var(--bg-secondary)", borderRadius: 4, height: 4, overflow: "hidden" }}>
+              <motion.div
+                animate={{ width: `${card.scoreVal}%` }}
+                transition={{ duration: 0.8 }}
+                style={{ height: "100%", background: card.color, borderRadius: 4 }}
+              />
+            </div>
+          )}
+        </motion.div>
+      ))}
     </div>
   );
 }

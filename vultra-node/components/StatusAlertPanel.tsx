@@ -2,223 +2,124 @@
 
 import { useVultraStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  CheckCircle,
-  AlertTriangle,
-  AlertOctagon,
-  ShieldOff,
-  Shield,
-  Bell,
-} from "lucide-react";
+import { ShieldOff, ShieldCheck, Shield } from "lucide-react";
+import ThreatMeter from "@/components/ThreatMeter";
 
 export default function StatusAlertPanel() {
-  const { systemStatus, alertMessage } = useVultraStore();
-  const isFrozen = systemStatus === "FROZEN";
-
-  const isAttack = alertMessage.includes("Flash loan") || alertMessage.includes("CRITICAL");
-  const isWarning = alertMessage.includes("Suspicious") || alertMessage.includes("triggered");
-
-  const AlertIcon = isAttack
-    ? AlertOctagon
-    : isWarning
-    ? AlertTriangle
-    : CheckCircle;
-
-  const alertColor = isFrozen
-    ? "var(--danger)"
-    : alertMessage.includes("✅")
-    ? "var(--success)"
-    : "var(--text-secondary)";
+  const { systemStatus, isFrozen, alertMessage, threatScore } = useVultraStore();
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.15 }}
-      className="glass-card"
+      className={isFrozen ? "glass-card-danger" : "glass-card"}
       style={{ padding: 24 }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          marginBottom: 20,
-        }}
-      >
-        <Bell size={18} color="var(--accent)" />
-        <h3
-          style={{
-            fontWeight: 700,
-            fontSize: "1rem",
-            color: "var(--text-primary)",
-          }}
-        >
-          Status & Alerts
-        </h3>
-      </div>
-
-      {/* System status big indicator */}
+      {/* Big status card */}
       <AnimatePresence mode="wait">
         <motion.div
           key={systemStatus}
-          initial={{ scale: 0.9, opacity: 0 }}
+          initial={{ scale: 0.92, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          exit={{ scale: 0.92, opacity: 0 }}
+          transition={{ duration: 0.35 }}
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 14,
-            padding: "18px 20px",
-            borderRadius: 14,
+            display: "flex", flexDirection: "column", alignItems: "center",
+            textAlign: "center", padding: "24px 20px",
+            borderRadius: 14, marginBottom: 20,
             background: isFrozen
-              ? "rgba(239,68,68,0.08)"
-              : "rgba(34,197,94,0.08)",
-            border: `1px solid ${isFrozen ? "rgba(239,68,68,0.25)" : "rgba(34,197,94,0.25)"}`,
-            marginBottom: 16,
+              ? "rgba(239,68,68,0.07)"
+              : "rgba(34,197,94,0.06)",
+            border: `1px solid ${isFrozen ? "rgba(239,68,68,0.3)" : "rgba(34,197,94,0.2)"}`,
           }}
         >
-          <div
+          {/* Icon */}
+          <motion.div
+            animate={isFrozen ? { scale: [1, 1.08, 1], filter: ["drop-shadow(0 0 4px #ef4444)", "drop-shadow(0 0 16px #ef4444)", "drop-shadow(0 0 4px #ef4444)"] } : {}}
+            transition={{ duration: 1.8, repeat: Infinity }}
             style={{
-              width: 48,
-              height: 48,
-              borderRadius: "50%",
-              background: isFrozen
-                ? "rgba(239,68,68,0.15)"
-                : "rgba(34,197,94,0.15)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
+              width: 64, height: 64, borderRadius: 20,
+              background: isFrozen ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.12)",
+              border: `1px solid ${isFrozen ? "rgba(239,68,68,0.3)" : "rgba(34,197,94,0.25)"}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              marginBottom: 14,
             }}
           >
             {isFrozen ? (
-              <ShieldOff size={24} color="var(--danger)" />
+              <ShieldOff size={30} color="var(--danger)" />
             ) : (
-              <Shield size={24} color="var(--success)" />
+              <ShieldCheck size={30} color="var(--success)" />
             )}
+          </motion.div>
+
+          {/* Status text */}
+          <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700, marginBottom: 6 }}>
+            System Status
           </div>
-          <div>
-            <div
-              style={{
-                fontSize: "0.72rem",
-                color: "var(--text-muted)",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                fontWeight: 600,
-                marginBottom: 2,
-              }}
-            >
-              System Status
-            </div>
-            <div
-              style={{
-                fontSize: "1.4rem",
-                fontWeight: 800,
-                color: isFrozen ? "var(--danger)" : "var(--success)",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              {systemStatus}
-            </div>
-            {isFrozen && (
-              <div
-                style={{
-                  fontSize: "0.75rem",
-                  color: "var(--danger)",
-                  marginTop: 2,
-                  opacity: 0.8,
-                }}
-              >
-                Withdrawals temporarily disabled
-              </div>
-            )}
+          <motion.div
+            key={systemStatus}
+            initial={{ y: 8, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            style={{
+              fontSize: "1.9rem", fontWeight: 900, letterSpacing: "-0.02em",
+              color: isFrozen ? "var(--danger)" : "var(--success)",
+              textShadow: isFrozen ? "0 0 24px rgba(239,68,68,0.5)" : "0 0 20px rgba(34,197,94,0.4)",
+              marginBottom: 6,
+            }}
+          >
+            {isFrozen ? "🔴 SYSTEM LOCKDOWN" : "🟢 SYSTEM ACTIVE"}
+          </motion.div>
+          <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+            {isFrozen
+              ? "Threat detected — circuit breaker engaged"
+              : "Monitoring stable — all systems operational"}
           </div>
         </motion.div>
       </AnimatePresence>
 
-      {/* Alert message */}
+      {/* Latest alert */}
       <AnimatePresence mode="wait">
         <motion.div
           key={alertMessage}
           initial={{ x: -10, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 10, opacity: 0 }}
-          transition={{ duration: 0.25 }}
+          transition={{ duration: 0.22 }}
           style={{
-            display: "flex",
-            gap: 12,
-            padding: "14px 16px",
-            borderRadius: 12,
+            padding: "12px 14px",
+            borderRadius: 10,
             background: "var(--bg-secondary)",
             border: "1px solid var(--border)",
+            fontSize: "0.82rem",
+            color: isFrozen ? "var(--danger)" : "var(--text-secondary)",
+            lineHeight: 1.5,
+            marginBottom: 16,
           }}
         >
-          <AlertIcon size={18} color={alertColor} style={{ flexShrink: 0, marginTop: 1 }} />
-          <div>
-            <div
-              style={{
-                fontSize: "0.72rem",
-                color: "var(--text-muted)",
-                textTransform: "uppercase",
-                letterSpacing: "0.07em",
-                fontWeight: 600,
-                marginBottom: 3,
-              }}
-            >
-              Latest Alert
-            </div>
-            <div
-              style={{
-                fontSize: "0.85rem",
-                color: isFrozen ? "var(--danger)" : "var(--text-secondary)",
-                lineHeight: 1.5,
-              }}
-            >
-              {alertMessage}
-            </div>
-          </div>
+          {alertMessage}
         </motion.div>
       </AnimatePresence>
 
-      {/* Mini status dots */}
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          marginTop: 16,
-          flexWrap: "wrap",
-        }}
-      >
+      {/* Threat meter */}
+      <ThreatMeter />
+
+      {/* Service health dots */}
+      <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
         {[
           { label: "Price Feed", ok: true },
-          { label: "Oracle", ok: !isFrozen },
-          { label: "Liquidity", ok: !isFrozen },
+          { label: "Oracle",     ok: !isFrozen },
+          { label: "Liquidity",  ok: !isFrozen },
           { label: "Governance", ok: true },
+          { label: "Monitoring", ok: true },
         ].map((item) => (
-          <div
-            key={item.label}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
-              padding: "4px 10px",
-              borderRadius: 8,
-              background: "var(--bg-secondary)",
-              border: "1px solid var(--border)",
-              fontSize: "0.73rem",
-              color: "var(--text-secondary)",
-            }}
-          >
-            <div
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: "50%",
-                background: item.ok ? "var(--success)" : "var(--danger)",
-              }}
-            />
+          <div key={item.label} style={{
+            display: "flex", alignItems: "center", gap: 5,
+            padding: "3px 9px", borderRadius: 7,
+            background: "var(--bg-secondary)", border: "1px solid var(--border)",
+            fontSize: "0.71rem", color: "var(--text-secondary)",
+          }}>
+            <div style={{ width: 5, height: 5, borderRadius: "50%", background: item.ok ? "var(--success)" : "var(--danger)" }} />
             {item.label}
           </div>
         ))}

@@ -9,7 +9,8 @@ import StatusAlertPanel from "@/components/StatusAlertPanel";
 import LiquidityLineChart from "@/components/LiquidityLineChart";
 import TxActivityBarChart from "@/components/TxActivityBarChart";
 import ActionPanel from "@/components/ActionPanel";
-import TransactionHistory from "@/components/TransactionHistory";
+import TransactionLog from "@/components/TransactionLog";
+import AlertPanel from "@/components/AlertPanel";
 import VestingSection from "@/components/VestingSection";
 
 export default function DashboardPage() {
@@ -17,9 +18,7 @@ export default function DashboardPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isConnected) {
-      router.push("/");
-    }
+    if (!isConnected) router.push("/");
   }, [isConnected, router]);
 
   if (!isConnected) return null;
@@ -27,63 +26,30 @@ export default function DashboardPage() {
   return (
     <div
       className="bg-grid"
-      style={{
-        minHeight: "100vh",
-        background: "var(--bg-primary)",
-        paddingBottom: 48,
-      }}
+      style={{ minHeight: "100vh", background: "var(--bg-primary)", paddingBottom: 52 }}
     >
       <Navbar />
 
-      <main
-        style={{
-          maxWidth: 1400,
-          margin: "0 auto",
-          padding: "28px 24px 0",
-        }}
-      >
-        {/* Row 1: Liquidity Cards */}
+      <main style={{ maxWidth: 1440, margin: "0 auto", padding: "24px 24px 0" }}>
+        {/* Row 1: Metric Cards */}
         <LiquidityCards />
 
-        {/* Row 2: Status + Action Panel */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 20,
-            marginTop: 20,
-          }}
-          className="dashboard-row-2"
-        >
+        {/* Row 2: Status + Action */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, marginTop: 18 }}>
           <StatusAlertPanel />
           <ActionPanel />
         </div>
 
         {/* Row 3: Charts */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 20,
-            marginTop: 20,
-          }}
-          className="dashboard-row-3"
-        >
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, marginTop: 18 }}>
           <LiquidityLineChart />
           <TxActivityBarChart />
         </div>
 
-        {/* Row 4: History + Vesting */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "3fr 1fr",
-            gap: 20,
-            marginTop: 20,
-          }}
-          className="dashboard-row-4"
-        >
-          <TransactionHistory />
+        {/* Row 4: Event Log + Alert Panel + Vesting */}
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 1fr", gap: 18, marginTop: 18 }}>
+          <TransactionLog />
+          <AlertPanel />
           <VestingSection />
         </div>
       </main>

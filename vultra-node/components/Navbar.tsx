@@ -2,11 +2,12 @@
 
 import { useVultraStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Wallet, LogOut, ExternalLink } from "lucide-react";
+import { Shield, ExternalLink } from "lucide-react";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import ThreatMeter from "@/components/ThreatMeter";
 
 export default function Navbar() {
-  const { walletAddress, systemStatus, isFrozen, disconnectWallet, threatScore } = useVultraStore();
+  const { systemStatus, isFrozen, threatScore } = useVultraStore();
 
   return (
     <>
@@ -123,24 +124,56 @@ export default function Navbar() {
               Attacker
             </a>
 
-            {/* Wallet */}
-            <div style={{
-              display: "flex", alignItems: "center", gap: 8,
-              padding: "7px 13px", borderRadius: 9,
-              background: "var(--bg-card)", border: "1px solid var(--border)",
-            }}>
-              <Wallet size={14} color="var(--accent)" />
-              <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-primary)", fontFamily: "monospace" }}>
-                {walletAddress}
-              </span>
-            </div>
-
-            <button onClick={disconnectWallet} className="btn btn-ghost" style={{ padding: "8px 12px" }} title="Disconnect">
-              <LogOut size={14} />
-            </button>
+            <RawConnectButton />
           </div>
         </div>
       </motion.header>
     </>
   );
+}
+
+import { useConnect, useAccount, useDisconnect } from 'wagmi'
+import { injected } from 'wagmi/connectors'
+
+function RawConnectButton() {
+  const { connect } = useConnect()
+  const { address, isConnected } = useAccount()
+  const { disconnect } = useDisconnect()
+
+  const handleConnect = async () => {
+    try {
+      if (typeof window !== "undefined" && window.ethereum) {
+        // Force the browser to trigger MetaMask directly through the lowest-level injected hook
+        connect({ connector: injected() });
+      } else {
+        alert("MetaMask (window.ethereum) is not detected in your browser!");
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  if (isConnected && address) {
+    return (
+      <button 
+        onClick={() => disconnect()}
+        className="btn"
+        style={{ background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.4)", padding: "8px 16px" }}
+      >
+        <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "white" }}>
+          {address.slice(0,6)}...{address.slice(-4)}
+        </span>
+      </button>
+    )
+  }
+
+  return (
+    <button 
+      onClick={handleConnect}
+      className="btn"
+      style={{ background: "#3b82f6", color: "white", padding: "8px 16px", fontWeight: 700 }}
+    >
+      Connect MetaMask
+    </button>
+  )
 }

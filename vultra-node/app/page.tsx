@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useVultraStore } from "@/lib/store";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { injected } from "wagmi/connectors";
 import { motion } from "framer-motion";
 import { Shield, Zap, Lock, Activity } from "lucide-react";
 
@@ -29,19 +30,17 @@ const features = [
   },
 ];
 
-export default function ConnectPage() {
-  const { isConnected, connectWallet, walletAddress } = useVultraStore();
+export default function LandingPage() {
   const router = useRouter();
+  const { address, isConnected } = useAccount();
+  const { connect } = useConnect();
+  const { disconnect } = useDisconnect();
 
   useEffect(() => {
     if (isConnected) {
       router.push("/dashboard");
     }
   }, [isConnected, router]);
-
-  const handleConnect = () => {
-    connectWallet();
-  };
 
   return (
     <div
@@ -200,7 +199,6 @@ export default function ConnectPage() {
             style={{
               color: "var(--text-secondary)",
               fontSize: "0.875rem",
-              marginBottom: 32,
               lineHeight: 1.6,
             }}
           >
@@ -208,19 +206,26 @@ export default function ConnectPage() {
             manage your DeFi liquidity.
           </p>
 
-          <button
-            onClick={handleConnect}
-            className="btn btn-primary"
-            style={{
-              width: "100%",
-              justifyContent: "center",
-              fontSize: "1rem",
-              padding: "14px 24px",
-            }}
-          >
-            <Zap size={20} />
-            Connect Wallet
-          </button>
+          {/* Real RainbowKit Button */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+            {isConnected && address ? (
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="btn"
+                style={{ background: "#3b82f6", color: "white", padding: "12px 24px", fontSize: "1.05rem", fontWeight: 700 }}
+              >
+                Enter Dashboard ({address.slice(0,6)}...)
+              </button>
+            ) : (
+              <button
+                onClick={() => connect({ connector: injected() })}
+                className="btn pulse-glow"
+                style={{ background: "#3b82f6", color: "white", padding: "12px 24px", fontSize: "1.05rem", fontWeight: 700 }}
+              >
+                Connect MetaMask
+              </button>
+            )}
+          </div>
 
           <div
             style={{

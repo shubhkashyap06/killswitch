@@ -1,0 +1,26 @@
+{
+  "engine": {
+    "rpcUrl": "http://127.0.0.1:8545",
+    "freezeThreshold": 70,
+    "decayRatePerMinute": 5,
+    "evaluationIntervalMs": 10000
+  },
+  "rules": {
+    "rapidTransactions": {
+      "name": "Rapid Tx Spam",
+      "timeWindowMs": 60000,
+      "thresholds": [
+        { "count": 2, "score": 40, "level": "WARNING" },
+        { "count": 3, "score": 75, "level": "CRITICAL" }
+      ]
+    },
+    "largeVolume": {
+      "name": "Large Volume Drain",
+      "timeWindowMs": 60000,
+      "thresholds": [
+        { "volume": 1000, "score": 40, "level": "WARNING" },
+        { "volume": 5000, "score": 80, "level": "CRITICAL" }
+      ]
+    }
+  }
+}

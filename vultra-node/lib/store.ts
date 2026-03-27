@@ -98,6 +98,7 @@ export interface VultraStore {
 
   /* Actions — attacker */
   simulateAttack: (type?: AttackType) => void;
+  pushAttackLog: (log: Omit<AttackLog, "id" | "timestamp">) => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -198,10 +199,10 @@ export const useVultraStore = create<VultraStore>((set, get) => ({
   alertMessage: "No suspicious activity detected.",
 
   /* ── Liquidity ── */
-  totalLiquidity: 22800,
-  availableLiquidity: 17800,
-  frozenLiquidity: 5000,
-  userBalance: 8500,
+  totalLiquidity: 0,
+  availableLiquidity: 0,
+  frozenLiquidity: 0,
+  userBalance: 0,
 
   /* ── Collections ── */
   transactions: [
@@ -238,9 +239,9 @@ export const useVultraStore = create<VultraStore>((set, get) => ({
   txActivity: initialTxActivity,
 
   /* ── Vesting ── */
-  vestingProgress: 42,
+  vestingProgress: 0,
   vestingTotal: 100000,
-  vestingUnlocked: 42000,
+  vestingUnlocked: 0,
 
   // ──────────────────────────────────────────────────────────────────────────
   // SYSTEM ACTIONS
@@ -355,6 +356,12 @@ export const useVultraStore = create<VultraStore>((set, get) => ({
       threatScore: next,
       alerts: [newAlert, ...alerts].slice(0, 20),
     });
+
+    if (typeof window !== "undefined") {
+      const chan = new BroadcastChannel("vultra_ui_telemetry");
+      chan.postMessage({ type: "THREAT_UPDATE", threatScore: next, attackLogs: get().attackLogs });
+      chan.close();
+    }
 
     // Auto-freeze if threshold reached
     if (next >= 70 && !get().isFrozen) {
@@ -580,70 +587,50 @@ export const useVultraStore = create<VultraStore>((set, get) => ({
       get().increaseThreat(meta.threat, meta.label);
     }
   },
+
+  pushAttackLog: (logInput) => {
+    const log: AttackLog = {
+      ...logInput,
+      id: uid(),
+      timestamp: new Date(),
+    };
+    set((state) => {
+      const newState = { attackLogs: [log, ...state.attackLogs].slice(0, 50) };
+      // Safely broadcast ONLY the attack logs and threat score
+      if (typeof window !== "undefined") {
+        const chan = new BroadcastChannel("vultra_ui_telemetry");
+        chan.postMessage({ type: "THREAT_UPDATE", threatScore: get().threatScore, attackLogs: newState.attackLogs });
+        chan.close();
+      }
+      return newState;
+    });
+  },
 }));
 
-// ─── Cross-Tab Synchronization ─────────────────────────────────────────────────
-// Allows dual portals to run in separate browser tabs and sync instantly
-
+// Safe UI Telemetry Receiver
 if (typeof window !== "undefined") {
-  const channel = new BroadcastChannel("vultra_node_sync");
-  let isReceiving = false;
-
-  const broadcastState = (state: VultraStore) => {
-    // Omit functions to prevent DataCloneError
-    const {
-      walletAddress, isConnected, systemStatus, isFrozen, threatScore,
-      alertMessage, totalLiquidity, availableLiquidity, frozenLiquidity,
-      userBalance, transactions, alerts, attackLogs, liquidityHistory,
-      txActivity, vestingProgress, vestingTotal, vestingUnlocked
-    } = state;
-    
-    channel.postMessage({
-      type: "SYNC_STATE",
-      state: {
-        walletAddress, isConnected, systemStatus, isFrozen, threatScore,
-        alertMessage, totalLiquidity, availableLiquidity, frozenLiquidity,
-        userBalance, transactions, alerts, attackLogs, liquidityHistory,
-        txActivity, vestingProgress, vestingTotal, vestingUnlocked
-      }
-    });
-  };
-
-  channel.onmessage = (event) => {
-    if (event.data?.type === "REQUEST_SYNC") {
-      // A new tab opened, send it our current state
-      broadcastState(useVultraStore.getState());
-      return;
-    }
-    
-    if (event.data?.type === "SYNC_STATE") {
-      isReceiving = true;
-      const incoming = event.data.state;
-      
-      // Rehydrate Dates across the boundary
-      const txs = incoming.transactions?.map((t: any) => ({ ...t, timestamp: new Date(t.timestamp) })) || [];
-      const alts = incoming.alerts?.map((a: any) => ({ ...a, timestamp: new Date(a.timestamp) })) || [];
-      const logs = incoming.attackLogs?.map((l: any) => ({ ...l, timestamp: new Date(l.timestamp) })) || [];
-
-      useVultraStore.setState({
-        ...incoming,
-        transactions: txs,
-        alerts: alts,
-        attackLogs: logs,
+  const telemetryChannel = new BroadcastChannel("vultra_ui_telemetry");
+  telemetryChannel.onmessage = (e) => {
+    if (e.data?.type === "THREAT_UPDATE") {
+      useVultraStore.setState({ 
+        threatScore: e.data.threatScore, 
+        attackLogs: e.data.attackLogs 
       });
-
-      // Release lock immediately after React flushes
-      setTimeout(() => { isReceiving = false; }, 50);
+    }
+    // Instant freeze sync from attacker portal after successful vault.freeze() TX
+    if (e.data?.type === "FORCE_FREEZE") {
+      useVultraStore.setState({ 
+        isFrozen: true, 
+        systemStatus: "FROZEN",
+        alertMessage: "⚠ Circuit breaker triggered — vault frozen by Guardian"
+      });
+    }
+    if (e.data?.type === "FORCE_UNFREEZE") {
+      useVultraStore.setState({ 
+        isFrozen: false, 
+        systemStatus: "NORMAL",
+        alertMessage: "No suspicious activity detected."
+      });
     }
   };
-
-  // Broadcast on any local action
-  useVultraStore.subscribe((state) => {
-    if (!isReceiving) {
-      broadcastState(state);
-    }
-  });
-
-  // Ask other tabs for latest state on boot
-  channel.postMessage({ type: "REQUEST_SYNC" });
 }

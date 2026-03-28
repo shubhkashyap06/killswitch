@@ -1,125 +1,65 @@
 "use client";
 
 import { useVultraStore } from "@/lib/store";
-import { motion } from "framer-motion";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { BarChart2 } from "lucide-react";
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div
-        style={{
-          background: "var(--bg-card)",
-          border: "1px solid var(--border)",
-          borderRadius: 10,
-          padding: "10px 14px",
-          fontSize: "0.8rem",
-          color: "var(--text-primary)",
-        }}
-      >
-        <div style={{ color: "var(--text-muted)", marginBottom: 6 }}>
-          {label}
-        </div>
-        {payload.map((p: any) => (
-          <div
-            key={p.name}
-            style={{ color: p.color, fontWeight: 600 }}
-          >
-            {p.name}: {p.value}
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
+import { motion } from "framer-motion";
 
 export default function TxActivityBarChart() {
   const { txActivity } = useVultraStore();
 
+  const data = txActivity.map(p => ({
+    time: p.time,
+    Deposits:    p.deposits,
+    Withdrawals: p.withdrawals,
+    Attacks:     p.attacks,
+  }));
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.3 }}
+      transition={{ duration: 0.4, delay: 0.15 }}
       className="glass-card"
-      style={{ padding: 24 }}
+      style={{ padding: "20px 20px 16px", overflow: "hidden" }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 20,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <BarChart2 size={18} color="#a78bfa" />
-          <h3
-            style={{
-              fontWeight: 700,
-              fontSize: "1rem",
-              color: "var(--text-primary)",
-            }}
-          >
-            Transaction Activity
-          </h3>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+        <div>
+          <div className="section-label" style={{ marginBottom: 6 }}>Transaction Activity</div>
+          <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--text-primary)" }}>Volume by Type</div>
         </div>
-        <span className="badge badge-accent">Real-time</span>
+        <BarChart2 size={15} color="var(--text-muted)" />
       </div>
 
-      <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={txActivity} margin={{ top: 5, right: 5, left: 0, bottom: 5 }} barGap={2}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(30,34,53,0.8)" vertical={false} />
-          <XAxis
-            dataKey="time"
-            tick={{ fill: "var(--text-muted)", fontSize: 11 }}
-            axisLine={false}
-            tickLine={false}
+      <ResponsiveContainer width="100%" height={180}>
+        <BarChart data={data} margin={{ top: 4, right: 0, left: -18, bottom: 0 }} barCategoryGap="35%">
+          <CartesianGrid stroke="rgba(255,255,255,0.04)" strokeDasharray="4 4" vertical={false} />
+          <XAxis dataKey="time" tick={{ fill: "var(--text-muted)", fontSize: 10 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: "var(--text-muted)", fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+          <Tooltip
+            contentStyle={{
+              background: "var(--bg-card)", border: "1px solid var(--border)",
+              borderRadius: 10, fontSize: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+            }}
+            labelStyle={{ color: "var(--text-muted)", marginBottom: 5 }}
+            cursor={{ fill: "rgba(255,255,255,0.03)" }}
           />
-          <YAxis
-            tick={{ fill: "var(--text-muted)", fontSize: 11 }}
-            axisLine={false}
-            tickLine={false}
-            allowDecimals={false}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend
-            wrapperStyle={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}
-          />
-          <Bar
-            dataKey="deposits"
-            name="Deposits"
-            fill="#4f6ef7"
-            radius={[4, 4, 0, 0]}
-            maxBarSize={18}
-          />
-          <Bar
-            dataKey="withdrawals"
-            name="Withdrawals"
-            fill="#22c55e"
-            radius={[4, 4, 0, 0]}
-            maxBarSize={18}
-          />
-          <Bar
-            dataKey="attacks"
-            name="Attacks"
-            fill="#ef4444"
-            radius={[4, 4, 0, 0]}
-            maxBarSize={18}
-          />
+          <Bar dataKey="Deposits"    fill="#3b82f6" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="Withdrawals" fill="#a78bfa" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="Attacks"     fill="#ef4444" radius={[3, 3, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
+
+      {/* Legend */}
+      <div style={{ display: "flex", gap: 18, marginTop: 12 }}>
+        {[{ c: "#3b82f6", l: "Deposits" }, { c: "#a78bfa", l: "Withdrawals" }, { c: "#ef4444", l: "Attacks" }].map(e => (
+          <div key={e.l} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <div style={{ width: 10, height: 10, borderRadius: 2.5, background: e.c }} />
+            <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>{e.l}</span>
+          </div>
+        ))}
+      </div>
     </motion.div>
   );
 }

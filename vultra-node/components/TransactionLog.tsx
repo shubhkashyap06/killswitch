@@ -1,127 +1,120 @@
 "use client";
 
-import { useVultraStore, Transaction, TxType } from "@/lib/store";
+import { useVultraStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ArrowDownCircle, ArrowUpCircle, AlertOctagon, ShieldCheck, Terminal,
-} from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Ban, RefreshCw, Activity } from "lucide-react";
 
-const typeConfig: Record<TxType, { symbol: string; color: string }> = {
-  DEPOSIT:  { symbol: "DEP",  color: "#22c55e" },
-  WITHDRAW: { symbol: "WDR",  color: "#3b82f6" },
-  ATTACK:   { symbol: "ATK",  color: "#ef4444" },
-  UNFREEZE: { symbol: "UNF",  color: "#f97316" },
+const typeConfig = {
+  DEPOSIT:  { icon: ArrowDownLeft, color: "var(--success)", label: "Deposit"  },
+  WITHDRAW: { icon: ArrowUpRight,  color: "var(--accent)",  label: "Withdraw" },
+  ATTACK:   { icon: Ban,           color: "var(--danger)",  label: "Attack"   },
+  UNFREEZE: { icon: RefreshCw,     color: "var(--warning)", label: "Unfreeze" },
 };
 
-const statusConfig: Record<string, { char: string; color: string }> = {
-  SUCCESS: { char: "OK",  color: "#22c55e" },
-  BLOCKED: { char: "BLK", color: "#f97316" },
-  ATTACK:  { char: "ERR", color: "#ef4444" },
+const statusConfig = {
+  SUCCESS: { color: "var(--success)", bg: "rgba(34,197,94,0.1)",  label: "Success" },
+  BLOCKED: { color: "var(--danger)",  bg: "rgba(239,68,68,0.1)",  label: "Blocked" },
+  ATTACK:  { color: "var(--danger)",  bg: "rgba(239,68,68,0.1)",  label: "Attack"  },
 };
+
+function fmt(v?: number) {
+  if (!v) return "—";
+  if (v >= 1000) return `$${(v / 1000).toFixed(1)}K`;
+  return `$${v.toFixed(2)}`;
+}
 
 function fmtTime(d: Date) {
-  return `${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}:${d.getSeconds().toString().padStart(2,"0")}`;
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 export default function TransactionLog() {
   const { transactions } = useVultraStore();
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.35 }}
-      className="glass-card"
-      style={{ padding: 24 }}
-    >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Terminal size={17} color="var(--accent)" />
-          <h3 style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text-primary)" }}>
-            Event Log
-          </h3>
+    <div className="glass-card" style={{ overflow: "hidden" }}>
+      {/* Header */}
+      <div style={{
+        padding: "15px 18px 12px",
+        borderBottom: "1px solid var(--border)",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <Activity size={14} color="var(--accent)" />
+          <span style={{ fontWeight: 700, fontSize: "0.86rem", color: "var(--text-primary)" }}>Transaction History</span>
         </div>
-        <span style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontFamily: "monospace" }}>
-          {transactions.length} records
-        </span>
+        <span className="badge badge-accent">{transactions.length} txns</span>
       </div>
 
-      <div
-        className="terminal-flicker"
-        style={{
-          background: "#050810",
-          border: "1px solid #1a2040",
-          borderRadius: 10,
-          padding: "14px 16px",
-          maxHeight: 320,
-          overflowY: "auto",
-        }}
-      >
-        <AnimatePresence>
-          {transactions.map((tx) => {
-            const tc = typeConfig[tx.type];
-            const sc = statusConfig[tx.status];
-            return (
-              <motion.div
-                key={tx.id}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.18 }}
-                className="terminal-log"
-                style={{
-                  display: "flex",
-                  gap: 10,
-                  padding: "3px 0",
-                  borderBottom: "1px solid rgba(26,32,64,0.5)",
-                  alignItems: "baseline",
-                }}
-              >
-                {/* Timestamp */}
-                <span style={{ color: "#434d6b", flexShrink: 0 }}>
-                  [{fmtTime(tx.timestamp)}]
-                </span>
-                {/* Type tag */}
-                <span style={{ color: tc.color, fontWeight: 700, flexShrink: 0, width: 36 }}>
-                  {tc.symbol}
-                </span>
-                {/* Status */}
-                <span style={{ color: sc.color, flexShrink: 0, width: 28, fontSize: "0.68rem" }}>
-                  {sc.char}
-                </span>
-                {/* Amount */}
-                {tx.amount && (
-                  <span style={{ color: "#7b87a8", flexShrink: 0 }}>
-                    ${tx.amount.toLocaleString()}
-                  </span>
-                )}
-                {/* Note */}
-                <span style={{ color: "#4b5680", flex: 1, fontSize: "0.71rem" }}>
-                  — {tx.note}
-                </span>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
+      {/* Table */}
+      <div style={{ overflowX: "auto" }}>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Time</th>
+              <th>Status</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            <AnimatePresence initial={false}>
+              {transactions.slice(0, 14).map((tx) => {
+                const t = typeConfig[tx.type] ?? typeConfig.DEPOSIT;
+                const s = statusConfig[tx.status] ?? statusConfig.SUCCESS;
+                const Icon = t.icon;
+                return (
+                  <motion.tr
+                    key={tx.id}
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{
+                          width: 28, height: 28, borderRadius: 7,
+                          background: `${t.color}14`,
+                          border: `1px solid ${t.color}28`,
+                          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                        }}>
+                          <Icon size={13} color={t.color} />
+                        </div>
+                        <span style={{ fontWeight: 600, fontSize: "0.82rem" }}>{t.label}</span>
+                      </div>
+                    </td>
+                    <td style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", fontSize: "0.82rem" }}>
+                      {fmt(tx.amount)}
+                    </td>
+                    <td style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontVariantNumeric: "tabular-nums" }}>
+                      {fmtTime(tx.timestamp)}
+                    </td>
+                    <td>
+                      <span style={{
+                        fontSize: "0.65rem", fontWeight: 700, padding: "2px 8px", borderRadius: 4,
+                        background: s.bg, color: s.color,
+                        textTransform: "uppercase", letterSpacing: "0.04em",
+                      }}>
+                        {s.label}
+                      </span>
+                    </td>
+                    <td style={{ color: "var(--text-secondary)", fontSize: "0.75rem", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {tx.note || "—"}
+                    </td>
+                  </motion.tr>
+                );
+              })}
+            </AnimatePresence>
+          </tbody>
+        </table>
 
         {transactions.length === 0 && (
-          <div className="terminal-log" style={{ color: "#434d6b" }}>
-            {">"} Awaiting transactions...
+          <div style={{ padding: "36px 24px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.8rem" }}>
+            No transactions yet. Deposit assets to begin.
           </div>
         )}
-
-        {/* Blinking cursor */}
-        <div className="terminal-log" style={{ color: "#434d6b", marginTop: 4 }}>
-          {">"}{" "}
-          <motion.span
-            animate={{ opacity: [1, 0, 1] }}
-            transition={{ duration: 1, repeat: Infinity }}
-            style={{ display: "inline-block", color: "#3b82f6" }}
-          >
-            █
-          </motion.span>
-        </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

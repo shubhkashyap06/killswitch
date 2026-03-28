@@ -1,0 +1,320 @@
+[36m[browser][39m [33mDetected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior[39m [2m(file://D:/VULTRA NODE/vultra-node/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)[22m
+[36m[browser][39m [33mDetected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior[39m [2m(file://D:/VULTRA NODE/vultra-node/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)[22m
+[36m[browser][39m [33mDetected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior[39m [2m(file://D:/VULTRA NODE/vultra-node/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)[22m
+[31m[1m⨯[22m[39m ./components/ActionPanel.tsx:479:1
+Unexpected token. Did you mean `[35m{'}[39m'}` or `&rbrace;`?
+  [90m477 |[0m     </motion.div>
+  [90m478 |[0m   );
+[31m[1m>[0m [90m479 |[0m }
+  [90m    |[0m [31m[1m^[0m
+  [90m480 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/ActionPanel.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/ActionPanel.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Server Component]
+
+
+
+./components/ActionPanel.tsx:479:1
+Unexpected token. Did you mean `[35m{'}[39m'}` or `&rbrace;`?
+  [90m477 |[0m     </motion.div>
+  [90m478 |[0m   );
+[31m[1m>[0m [90m479 |[0m }
+  [90m    |[0m [31m[1m^[0m
+  [90m480 |[0m
+
+Parsing ecmascript source code failed
+
+Generated code of loaders [next/dist/build/babel/loader] transform of file content of components/ActionPanel.tsx:
+./components/ActionPanel.tsx:479:1
+  [90m477 |[0m     </motion.div>
+  [90m478 |[0m   );
+[31m[1m>[0m [90m479 |[0m }
+  [90m    |[0m [31m[1m^[0m
+  [90m480 |[0m
+
+Import traces:
+  Client Component Browser:
+    ./components/ActionPanel.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/ActionPanel.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Server Component]
+
+
+[31m[1m⨯[22m[39m ./components/ActionPanel.tsx:479:1
+Unexpected token. Did you mean `[35m{'}[39m'}` or `&rbrace;`?
+  [90m477 |[0m     </motion.div>
+  [90m478 |[0m   );
+[31m[1m>[0m [90m479 |[0m }
+  [90m    |[0m [31m[1m^[0m
+  [90m480 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/ActionPanel.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/ActionPanel.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Server Component]
+
+
+
+./components/ActionPanel.tsx:479:1
+Unexpected token. Did you mean `[35m{'}[39m'}` or `&rbrace;`?
+  [90m477 |[0m     </motion.div>
+  [90m478 |[0m   );
+[31m[1m>[0m [90m479 |[0m }
+  [90m    |[0m [31m[1m^[0m
+  [90m480 |[0m
+
+Parsing ecmascript source code failed
+
+Generated code of loaders [next/dist/build/babel/loader] transform of file content of components/ActionPanel.tsx:
+./components/ActionPanel.tsx:479:1
+  [90m477 |[0m     </motion.div>
+  [90m478 |[0m   );
+[31m[1m>[0m [90m479 |[0m }
+  [90m    |[0m [31m[1m^[0m
+  [90m480 |[0m
+
+Import traces:
+  Client Component Browser:
+    ./components/ActionPanel.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/ActionPanel.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Server Component]
+
+
+[31m[1m⨯[22m[39m ./components/ActionPanel.tsx:479:1
+Unexpected token. Did you mean `[35m{'}[39m'}` or `&rbrace;`?
+  [90m477 |[0m     </motion.div>
+  [90m478 |[0m   );
+[31m[1m>[0m [90m479 |[0m }
+  [90m    |[0m [31m[1m^[0m
+  [90m480 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/ActionPanel.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/ActionPanel.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Server Component]
+
+
+
+./components/ActionPanel.tsx:479:1
+Unexpected token. Did you mean `[35m{'}[39m'}` or `&rbrace;`?
+  [90m477 |[0m     </motion.div>
+  [90m478 |[0m   );
+[31m[1m>[0m [90m479 |[0m }
+  [90m    |[0m [31m[1m^[0m
+  [90m480 |[0m
+
+Parsing ecmascript source code failed
+
+Generated code of loaders [next/dist/build/babel/loader] transform of file content of components/ActionPanel.tsx:
+./components/ActionPanel.tsx:479:1
+  [90m477 |[0m     </motion.div>
+  [90m478 |[0m   );
+[31m[1m>[0m [90m479 |[0m }
+  [90m    |[0m [31m[1m^[0m
+  [90m480 |[0m
+
+Import traces:
+  Client Component Browser:
+    ./components/ActionPanel.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/ActionPanel.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Server Component]
+
+
+[31m[1m⨯[22m[39m ./components/ActionPanel.tsx:479:1
+Unexpected token. Did you mean `[35m{'}[39m'}` or `&rbrace;`?
+  [90m477 |[0m     </motion.div>
+  [90m478 |[0m   );
+[31m[1m>[0m [90m479 |[0m }
+  [90m    |[0m [31m[1m^[0m
+  [90m480 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/ActionPanel.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/ActionPanel.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Server Component]
+
+
+
+./components/ActionPanel.tsx:479:1
+Unexpected token. Did you mean `[35m{'}[39m'}` or `&rbrace;`?
+  [90m477 |[0m     </motion.div>
+  [90m478 |[0m   );
+[31m[1m>[0m [90m479 |[0m }
+  [90m    |[0m [31m[1m^[0m
+  [90m480 |[0m
+
+Parsing ecmascript source code failed
+
+Generated code of loaders [next/dist/build/babel/loader] transform of file content of components/ActionPanel.tsx:
+./components/ActionPanel.tsx:479:1
+  [90m477 |[0m     </motion.div>
+  [90m478 |[0m   );
+[31m[1m>[0m [90m479 |[0m }
+  [90m    |[0m [31m[1m^[0m
+  [90m480 |[0m
+
+Import traces:
+  Client Component Browser:
+    ./components/ActionPanel.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/ActionPanel.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Server Component]
+
+
+[36m[browser][39m [31mUncaught Error: ./components/ActionPanel.tsx:479:1
+Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  477 |     </motion.div>
+  478 |   );
+> 479 | }
+      | ^
+  480 |
+
+Parsing ecmascript source code failed
+
+Generated code of loaders [next/dist/build/babel/loader] transform of file content of components/ActionPanel.tsx:
+./components/ActionPanel.tsx:479:1
+  477 |     </motion.div>
+  478 |   );
+> 479 | }
+      | ^
+  480 |
+
+Import traces:
+  Client Component Browser:
+    ./components/ActionPanel.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/ActionPanel.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Server Component]
+
+[39m
+[31m    at <unknown> (Error: ./components/ActionPanel.tsx:479:1)
+    at <unknown> (./components/ActionPanel.tsx:479:1)
+    at <unknown> (Error: (./components/ActionPanel.tsx:479:1)
+    at <unknown> (./components/ActionPanel.tsx:479:1)[39m
+[36m[browser][39m [31mUncaught Error: ./components/ActionPanel.tsx:479:1
+Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  477 |     </motion.div>
+  478 |   );
+> 479 | }
+      | ^
+  480 |
+
+Parsing ecmascript source code failed
+
+Generated code of loaders [next/dist/build/babel/loader] transform of file content of components/ActionPanel.tsx:
+./components/ActionPanel.tsx:479:1
+  477 |     </motion.div>
+  478 |   );
+> 479 | }
+      | ^
+  480 |
+
+Import traces:
+  Client Component Browser:
+    ./components/ActionPanel.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/ActionPanel.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Server Component]
+
+[39m
+[31m    at <unknown> (Error: ./components/ActionPanel.tsx:479:1)
+    at <unknown> (./components/ActionPanel.tsx:479:1)
+    at <unknown> (Error: (./components/ActionPanel.tsx:479:1)
+    at <unknown> (./components/ActionPanel.tsx:479:1)[39m
+[36m[browser][39m [31mUncaught Error: ./components/ActionPanel.tsx:479:1
+Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  477 |     </motion.div>
+  478 |   );
+> 479 | }
+      | ^
+  480 |
+
+Parsing ecmascript source code failed
+
+Generated code of loaders [next/dist/build/babel/loader] transform of file content of components/ActionPanel.tsx:
+./components/ActionPanel.tsx:479:1
+  477 |     </motion.div>
+  478 |   );
+> 479 | }
+      | ^
+  480 |
+
+Import traces:
+  Client Component Browser:
+    ./components/ActionPanel.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Client Component Browser]
+    ./app/dashboard/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/ActionPanel.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Client Component SSR]
+    ./app/dashboard/page.tsx [Server Component]
+
+[39m
+[31m    at <unknown> (Error: ./components/ActionPanel.tsx:479:1)
+    at <unknown> (./components/ActionPanel.tsx:479:1)
+    at <unknown> (Error: (./components/ActionPanel.tsx:479:1)
+    at <unknown> (./components/ActionPanel.tsx:479:1)[39m
+[36m[browser][39m [33mDetected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior[39m [2m(file://D:/VULTRA NODE/vultra-node/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)[22m
+[36m[browser][39m [33mDetected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior[39m [2m(file://D:/VULTRA NODE/vultra-node/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)[22m
+[36m[browser][39m [33mDetected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior[39m [2m(file://D:/VULTRA NODE/vultra-node/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)[22m

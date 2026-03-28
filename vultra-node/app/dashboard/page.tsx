@@ -26,28 +26,29 @@ export default function DashboardPage() {
   return (
     <div
       className="bg-grid"
-      style={{ minHeight: "100vh", background: "var(--bg-primary)", paddingBottom: 52 }}
+      style={{ minHeight: "100vh", background: "var(--bg-primary)", paddingBottom: 56 }}
     >
       <Navbar />
 
-      <main style={{ maxWidth: 1440, margin: "0 auto", padding: "24px 24px 0" }}>
+      <main style={{ maxWidth: 1440, margin: "0 auto", padding: "22px 22px 0" }}>
+
         {/* Row 1: Metric Cards */}
         <LiquidityCards />
 
         {/* Row 2: Status + Action */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, marginTop: 18 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
           <StatusAlertPanel />
           <ActionPanel />
         </div>
 
         {/* Row 3: Charts */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, marginTop: 18 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
           <LiquidityLineChart />
           <TxActivityBarChart />
         </div>
 
-        {/* Row 4: Event Log + Alert Panel + Vesting */}
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 1fr", gap: 18, marginTop: 18 }}>
+        {/* Row 4: Tx Log + Alert Feed + Vesting */}
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 1fr", gap: 16, marginTop: 16 }}>
           <TransactionLog />
           <AlertPanel />
           <VestingSection />

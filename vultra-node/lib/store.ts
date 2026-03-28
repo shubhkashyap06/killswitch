@@ -353,6 +353,10 @@ export const useVultraStore = create<VultraStore>((set, get) => ({
   },
 
   increaseThreat: (score: number, reason = "Suspicious activity") => {
+    if (gradualResetTimer) {
+      clearInterval(gradualResetTimer);
+      gradualResetTimer = null;
+    }
     const current = get().threatScore;
     const next = Math.min(current + score, 100);
     const alerts = get().alerts;
@@ -630,6 +634,10 @@ if (typeof window !== "undefined") {
   const telemetryChannel = new BroadcastChannel("vultra_ui_telemetry");
   telemetryChannel.onmessage = (e) => {
     if (e.data?.type === "THREAT_UPDATE") {
+      if (gradualResetTimer) {
+        clearInterval(gradualResetTimer);
+        gradualResetTimer = null;
+      }
       useVultraStore.setState({ 
         threatScore: e.data.threatScore, 
         attackLogs: e.data.attackLogs 

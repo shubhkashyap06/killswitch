@@ -170,6 +170,35 @@ async function main() {
     }
   });
 
+  // POST /api/authorize-large-withdrawal — Authorizes a >30% withdrawal
+  app.post("/api/authorize-large-withdrawal", async (req, res) => {
+    try {
+      console.log(`\n⚙️  Authorizing large withdrawal (lifting cap temporarily)...`);
+      const adminWallet = new ethers.Wallet("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80", provider);
+      const adminVault = new ethers.Contract(VAULT_ADDRESS, vaultArtifact.abi, adminWallet);
+      
+      const tx = await adminVault.setMaxWithdrawBps(10000); // 100%
+      await tx.wait();
+      console.log(`✅ Cap lifted to 100%. TX: ${tx.hash}`);
+
+      // Auto-reset back to 30% after 60 seconds
+      setTimeout(async () => {
+        try {
+          const resetTx = await adminVault.setMaxWithdrawBps(3000);
+          await resetTx.wait();
+          console.log(`✅ Cap restored to 30%. TX: ${resetTx.hash}`);
+        } catch (e) {
+          console.error("❌ Failed to restore cap:", e);
+        }
+      }, 60000);
+
+      res.json({ success: true, txHash: tx.hash });
+    } catch (err: any) {
+      console.error(`❌ Authorization failed: ${err.message}`);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // POST /api/execute-freeze — Executes freeze() as Guardian
   app.post("/api/execute-freeze", async (req, res) => {
     const { reason } = req.body;

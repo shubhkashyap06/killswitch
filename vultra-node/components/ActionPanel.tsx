@@ -168,7 +168,15 @@ export default function ActionPanel() {
       }
 
       // OTP valid — execute withdrawal
-      showFeedback("✅ OTP verified! Processing withdrawal...", "warn");
+      showFeedback("✅ OTP verified! Authorizing large withdrawal limit...", "warn");
+      const authRes = await fetch(`${ENGINE_URL}/api/authorize-large-withdrawal`, { method: "POST" });
+      const authData = await authRes.json();
+      if (!authRes.ok || !authData.success) {
+        showFeedback(`❌ Authorization failed: ${authData.error || "Unknown error"}`, "error");
+        return;
+      }
+
+      showFeedback("✅ Authorised! Processing transaction...", "warn");
       if (chainId !== 31337) await switchChainAsync({ chainId: 31337 });
       const parsedAmt = parseEther(pendingWithdrawAmt);
       await writeContractAsync({ chainId: 31337, address: VAULT_ADDRESS, abi: VaultABI.abi, functionName: "withdraw", args: [parsedAmt] });
@@ -253,25 +261,28 @@ export default function ActionPanel() {
   };
 
   const fbColors = {
-    success: { bg: "rgba(34,197,94,0.1)", border: "rgba(34,197,94,0.3)", color: "var(--success)" },
-    error: { bg: "rgba(239,68,68,0.1)", border: "rgba(239,68,68,0.3)", color: "var(--danger)" },
-    warn: { bg: "rgba(249,115,22,0.1)", border: "rgba(249,115,22,0.3)", color: "var(--warning)" },
+    success: { bg: "var(--success-dim)", border: "rgba(0,208,156,0.3)", color: "var(--success)" },
+    error:   { bg: "var(--danger-dim)",  border: "rgba(255,82,82,0.3)",  color: "var(--danger)" },
+    warn:    { bg: "var(--warning-dim)", border: "rgba(255,183,77,0.3)", color: "var(--warning)" },
   };
 
   const inputStyle: React.CSSProperties = {
-    width: "100%", padding: "10px 14px", borderRadius: 8, outline: "none",
-    background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
-    color: "var(--text-primary)", fontSize: "0.9rem", boxSizing: "border-box",
+    width: "100%", padding: "10px 13px", borderRadius: 8, outline: "none",
+    background: "var(--bg-input)", border: "1px solid var(--border)",
+    color: "var(--text-primary)", fontSize: "14px", boxSizing: "border-box",
+    fontFamily: "'Inter', sans-serif",
+    transition: "border-color 0.15s",
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.2 }}
+      transition={{ duration: 0.35, delay: 0.2 }}
       className={isFrozen ? "glass-card-danger" : "glass-card"}
-      style={{ padding: 24 }}
+      style={{ padding: 24, display: "flex", flexDirection: "column" }}
     >
+      {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
         <Settings2 size={17} color="var(--accent)" />
         <h3 style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text-primary)" }}>
@@ -279,65 +290,74 @@ export default function ActionPanel() {
         </h3>
         {isFrozen && (
           <span className="badge badge-danger" style={{ marginLeft: "auto" }}>
-            🔒 CIRCUIT BREAKER ACTIVE
+            🔒 FROZEN
           </span>
         )}
       </div>
 
-      {/* Freeze warning banner */}
-      <AnimatePresence>
-        {isFrozen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            style={{
-              padding: "12px 16px", borderRadius: 10, marginBottom: 16,
-              background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)",
-              fontSize: "0.82rem", color: "var(--danger)", lineHeight: 1.5, fontWeight: 600,
-            }}
-          >
-            ⚠️ Vault frozen — an emergency alert has been sent to the admin.
-            <br />
-            <span style={{ fontWeight: 400, opacity: 0.85 }}>
-              Authorize unfreeze via the OTP sent to your email below.
+        {/* Freeze warning banner */}
+        <AnimatePresence>
+          {isFrozen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              style={{
+                padding: "10px 14px", borderRadius: 8, marginBottom: 16,
+                background: "var(--danger-dim)", border: "1px solid rgba(255,82,82,0.3)",
+                fontSize: 12.5, color: "var(--danger)", lineHeight: 1.55, fontWeight: 500,
+              }}
+            >
+              ⚠️ Vault frozen — emergency alert dispatched to admin email.
+              <br />
+              <span style={{ fontWeight: 400, opacity: 0.8 }}>Authorize unfreeze via the Admin tab.</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Deposit */}
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: "block", fontSize: 11, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+            Amount (VLT)
+          </label>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input type="number" value={depositAmount} onChange={e => setDepositAmount(e.target.value)}
+              placeholder="0.00" className="input-field" min="0" />
+            <button onClick={handleDeposit} className="btn btn-success" style={{ flexShrink: 0, padding: "10px 16px" }}>
+              <ArrowDownCircle size={15} /> Deposit
+            </button>
+          </div>
+        </div>
+
+        {/* Withdraw */}
+        <div style={{ marginBottom: 18 }}>
+          <label style={{ display: "block", fontSize: 11, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+            Withdraw (VLT)
+          </label>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input type="number" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)}
+              placeholder="0.00" className="input-field" min="0" disabled={isFrozen} />
+            <button onClick={handleWithdraw} disabled={isFrozen} className="btn btn-ghost" style={{ flexShrink: 0, padding: "10px 16px", whiteSpace: "nowrap" }}>
+              <ArrowUpCircle size={15} /> Withdraw
+            </button>
+          </div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 6 }}>
+            Balance: {userBalance.toFixed(4)} VLT · Max single: 30% of pool
+          </div>
+        </div>
+
+        <div style={{ height: 1, background: "var(--border)", marginBottom: 16 }} />
+
+        {/* Admin: Unfreeze */}
+        <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Lock size={11} /> Guardian Admin</span>
+          {isFrozen && timeLeft > 0 && (
+            <span style={{ color: "var(--warning)", display: "flex", alignItems: "center", gap: 4 }}>
+              <Clock size={11} /> {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}
             </span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Deposit */}
-      <div style={{ marginBottom: 14 }}>
-        <label style={{ display: "block", fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, marginBottom: 7 }}>
-          Deposit Amount (VLT)
-        </label>
-        <div style={{ display: "flex", gap: 8 }}>
-          <input type="number" value={depositAmount} onChange={e => setDepositAmount(e.target.value)}
-            placeholder="0.00" className="input-field" min="0" />
-          <button onClick={handleDeposit} className="btn btn-success" style={{ whiteSpace: "nowrap", flexShrink: 0, padding: "10px 16px" }}>
-            <ArrowDownCircle size={16} />
-            Deposit
-          </button>
+          )}
         </div>
-      </div>
 
-      {/* Withdraw */}
-      <div style={{ marginBottom: 20 }}>
-        <label style={{ display: "block", fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, marginBottom: 7 }}>
-          Withdraw Amount (VLT)
-        </label>
-        <div style={{ display: "flex", gap: 8 }}>
-          <input type="number" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)}
-            placeholder="0.00" className="input-field" min="0" disabled={isFrozen} />
-          <button onClick={handleWithdraw} disabled={isFrozen} className="btn btn-ghost"
-            style={{ whiteSpace: "nowrap", flexShrink: 0, padding: "10px 16px" }}>
-            <ArrowUpCircle size={16} />
-            Withdraw
-          </button>
-        </div>
-      </div>
-
-      {/* Withdrawal OTP Modal — appears when >30% withdrawal is requested */}
       <AnimatePresence>
         {wdOtpActive && (
           <motion.div
@@ -400,6 +420,11 @@ export default function ActionPanel() {
                 ⚠️ No email set — click the <strong>Profile</strong> button in the header first.
               </div>
             )}
+            {userEmail && isFrozen && (
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: 8, textAlign: "center" }}>
+                OTP will be sent to <strong>{userEmail}</strong>
+              </div>
+            )}
             <button
               onClick={() => {
                 if (isFrozen && userEmail) handleRequestOtp();
@@ -410,7 +435,7 @@ export default function ActionPanel() {
               style={{ width: "100%", justifyContent: "center" }}
             >
               <ShieldCheck size={16} />
-              {otpLoading ? "Sending OTP..." : isFrozen ? `Authorize Unfreeze (OTP → ${userEmail || "Set Profile First"})` : "Unfreeze Vault"}
+              {otpLoading ? "Sending OTP..." : isFrozen ? (!userEmail ? "Set Email First" : "Send Unfreeze OTP") : "Unfreeze Vault"}
             </button>
           </motion.div>
         )}
@@ -456,15 +481,14 @@ export default function ActionPanel() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
             style={{
-              marginTop: 14, padding: "10px 14px", borderRadius: 10,
+              marginTop: 14, padding: "9px 12px", borderRadius: 7,
               background: fbColors[feedback.type].bg,
               border: `1px solid ${fbColors[feedback.type].border}`,
               color: fbColors[feedback.type].color,
-              fontSize: "0.82rem", fontWeight: 600,
-              display: "flex", alignItems: "center", gap: 8,
+              fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 7,
             }}
           >
-            <Zap size={13} />
+            <Zap size={12} />
             {feedback.msg}
           </motion.div>
         )}

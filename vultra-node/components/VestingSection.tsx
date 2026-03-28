@@ -2,205 +2,98 @@
 
 import { useVultraStore } from "@/lib/store";
 import { motion } from "framer-motion";
-import { Unlock, Timer } from "lucide-react";
-
-function formatNum(n: number) {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return n.toFixed(0);
-}
+import { Unlock, Lock } from "lucide-react";
 
 export default function VestingSection() {
   const { vestingProgress, vestingTotal, vestingUnlocked } = useVultraStore();
+  const pct = vestingTotal > 0 ? Math.min(100, (vestingUnlocked / vestingTotal) * 100) : 0;
 
-  const locked = vestingTotal - vestingUnlocked;
+  function fmt(v: number) {
+    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+    if (v >= 1000) return `${(v / 1000).toFixed(1)}K`;
+    return v.toFixed(0);
+  }
 
-  const milestones = [
-    { pct: 25, label: "Q1" },
-    { pct: 50, label: "Q2" },
-    { pct: 75, label: "Q3" },
-    { pct: 100, label: "Q4" },
-  ];
+  const milestones = [25, 50, 75, 100];
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.4 }}
+      transition={{ duration: 0.35, delay: 0.15 }}
       className="glass-card"
-      style={{ padding: 24 }}
+      style={{ padding: 22, height: "100%" }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          marginBottom: 20,
-        }}
-      >
-        <Unlock size={18} color="#a78bfa" />
-        <h3
-          style={{
-            fontWeight: 700,
-            fontSize: "1rem",
-            color: "var(--text-primary)",
-          }}
-        >
-          Token Vesting
-        </h3>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: 10,
+          background: "var(--purple-dim)",
+          border: "1px solid rgba(167,139,250,0.25)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          {pct >= 100 ? <Unlock size={16} color="var(--purple)" /> : <Lock size={16} color="var(--purple)" />}
+        </div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: "0.86rem", color: "var(--text-primary)" }}>Vesting Schedule</div>
+          <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", marginTop: 2 }}>LP token unlock progress</div>
+        </div>
       </div>
 
-      {/* Progress ring proxy — linear */}
+      {/* Percentage */}
       <div style={{ marginBottom: 16 }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginBottom: 6,
-          }}
+        <motion.div
+          key={pct}
+          initial={{ opacity: 0.7 }}
+          animate={{ opacity: 1 }}
+          style={{ fontSize: "2.2rem", fontWeight: 900, letterSpacing: "-0.04em", color: "var(--text-primary)", lineHeight: 1 }}
         >
-          <span style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
-            Unlocked
-          </span>
-          <span
-            style={{
-              fontSize: "0.85rem",
-              fontWeight: 700,
-              color: "var(--text-primary)",
-            }}
-          >
-            {vestingProgress}%
-          </span>
+          {pct.toFixed(1)}
+          <span style={{ fontSize: "0.95rem", color: "var(--text-muted)", marginLeft: 3 }}>%</span>
+        </motion.div>
+        <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 5 }}>
+          {fmt(vestingUnlocked)} / {fmt(vestingTotal)} VLT unlocked
         </div>
+      </div>
 
-        {/* Bar track */}
-        <div
-          style={{
-            height: 10,
-            background: "var(--bg-secondary)",
-            borderRadius: 999,
-            overflow: "hidden",
-            position: "relative",
-          }}
-        >
+      {/* Progress bar with milestone markers */}
+      <div style={{ position: "relative", marginBottom: 6 }}>
+        <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 3, height: 6 }}>
           <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${vestingProgress}%` }}
-            transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
-            style={{
-              height: "100%",
-              background: "linear-gradient(90deg, #4f6ef7, #a78bfa, #38bdf8)",
-              borderRadius: 999,
-              boxShadow: "0 0 12px rgba(167,139,250,0.5)",
-            }}
+            animate={{ width: `${pct}%` }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            style={{ height: "100%", background: "var(--purple)", borderRadius: 3, boxShadow: "0 0 8px rgba(167,139,250,0.4)" }}
           />
         </div>
-
-        {/* Milestones */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: 4,
-          }}
-        >
-          {milestones.map((m) => (
-            <div
-              key={m.label}
-              style={{
-                fontSize: "0.65rem",
-                color:
-                  vestingProgress >= m.pct
-                    ? "#a78bfa"
-                    : "var(--text-muted)",
-                fontWeight: 600,
-                textAlign: "center",
-              }}
-            >
-              {m.label}
-            </div>
-          ))}
-        </div>
+        {milestones.map(m => (
+          <div key={m} style={{
+            position: "absolute", top: -3, left: `${m}%`,
+            transform: "translateX(-50%)",
+            width: 2, height: 12, borderRadius: 1,
+            background: pct >= m ? "var(--purple)" : "rgba(255,255,255,0.12)",
+          }} />
+        ))}
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, marginBottom: 16 }}>
+        {milestones.map(m => (
+          <span key={m} style={{ fontSize: "0.62rem", fontWeight: 700, color: pct >= m ? "var(--purple)" : "var(--text-muted)" }}>
+            {m}%
+          </span>
+        ))}
       </div>
 
-      {/* Stats */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            padding: "10px 12px",
-            borderRadius: 10,
-            background: "var(--bg-secondary)",
-            border: "1px solid var(--border)",
-          }}
-        >
-          <span style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
-            Total Allocation
-          </span>
-          <span
-            style={{
-              fontSize: "0.85rem",
-              fontWeight: 700,
-              color: "var(--text-primary)",
-              fontFamily: "monospace",
-            }}
-          >
-            {formatNum(vestingTotal)} VLT
-          </span>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            padding: "10px 12px",
-            borderRadius: 10,
-            background: "rgba(167,139,250,0.08)",
-            border: "1px solid rgba(167,139,250,0.2)",
-          }}
-        >
-          <span style={{ fontSize: "0.78rem", color: "#a78bfa" }}>
-            ✅ Unlocked
-          </span>
-          <span
-            style={{
-              fontSize: "0.85rem",
-              fontWeight: 700,
-              color: "#a78bfa",
-              fontFamily: "monospace",
-            }}
-          >
-            {formatNum(vestingUnlocked)} VLT
-          </span>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            padding: "10px 12px",
-            borderRadius: 10,
-            background: "var(--bg-secondary)",
-            border: "1px solid var(--border)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <Timer size={12} color="var(--text-muted)" />
-            <span style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
-              Remaining
-            </span>
-          </div>
-          <span
-            style={{
-              fontSize: "0.85rem",
-              fontWeight: 700,
-              color: "var(--text-secondary)",
-              fontFamily: "monospace",
-            }}
-          >
-            {formatNum(locked)} VLT
-          </span>
+      {/* Next unlock label */}
+      <div style={{
+        padding: "10px 13px", borderRadius: 9,
+        background: "rgba(255,255,255,0.03)",
+        border: "1px solid var(--border)",
+      }}>
+        <div className="section-label" style={{ marginBottom: 5 }}>Next unlock</div>
+        <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--text-secondary)", lineHeight: 1.55 }}>
+          {pct >= 100 ? "✅ Fully vested — all tokens available"
+            : pct >= 75 ? "Final tranche in progress"
+            : pct >= 50 ? "50% cliff reached — quarter 3 active"
+            : "Deposit more to accelerate vesting"}
         </div>
       </div>
     </motion.div>

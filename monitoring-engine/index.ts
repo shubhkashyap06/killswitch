@@ -213,6 +213,19 @@ async function main() {
             `\n[EVENT] 🔼 Withdraw: ${formattedAmount} VLT by ${user.slice(0, 10)}…`
           );
 
+          // ── DEMO WHITELIST BYPASS ──────────────────────────────────────
+          const whitelistConfig = config.demoWhitelist || { enabled: false, addresses: [] };
+          if (whitelistConfig.enabled) {
+            const normalizedUser = user.toLowerCase();
+            const isWhitelisted = whitelistConfig.addresses.some(
+              (addr: string) => addr.toLowerCase() === normalizedUser
+            );
+            if (isWhitelisted) {
+              console.log(`  ✅ [WHITELISTED] ${user.slice(0, 10)}… — skipping threat evaluation.`);
+              continue;
+            }
+          }
+
           // Skip if vault is already frozen — no point scoring
           if (isFrozen) {
             console.log("  ↳ Vault is frozen — event noted, no action needed.");
@@ -230,14 +243,48 @@ async function main() {
             totalDeposits = Number(ethers.formatEther(raw));
           } catch {}
 
-          const recentVolume = state.withdrawals
-            .filter((w) => Date.now() - w.timestamp < 60_000)
-            .reduce((s, w) => s + w.amount, 0);
+          // ── SMART PRE-SCREEN ───────────────────────────────────────────
+          const ps = config.preScreen || {
+            minSingleWithdrawalBps: 500,
+            rapidTxCount: 3,
+            rapidTxWindowMs: 60000,
+            cumulativeVolumePct: 10,
+          };
 
-          console.log(`\n⏳ AI Evaluation started for ${user.slice(0, 8)}... Freezing vault proactively.`);
-          
-          if (!isFrozen) {
-            await triggerFreeze(user, "Proactive freeze for AI evaluation");
+          const withdrawalBps = totalDeposits > 0
+            ? Math.floor((formattedAmount / totalDeposits) * 10000)
+            : 0;
+
+          const recentWindow = ps.rapidTxWindowMs || 60000;
+          const recentWithdrawals = state.withdrawals.filter(
+            (w) => Date.now() - w.timestamp < recentWindow
+          );
+          const recentTxCount = recentWithdrawals.length;
+          const recentVolume = recentWithdrawals.reduce((s, w) => s + w.amount, 0);
+          const cumulativeVolumePct = totalDeposits > 0
+            ? (recentVolume / totalDeposits) * 100
+            : 0;
+
+          const isLargeWithdrawal = withdrawalBps >= ps.minSingleWithdrawalBps;
+          const isRapidFire = recentTxCount >= ps.rapidTxCount;
+          const isCumulativeDrain = cumulativeVolumePct >= ps.cumulativeVolumePct;
+          const shouldProactiveFreeze = isLargeWithdrawal || isRapidFire || isCumulativeDrain;
+
+          if (shouldProactiveFreeze) {
+            const reasons = [];
+            if (isLargeWithdrawal) reasons.push(`single_tx=${(withdrawalBps / 100).toFixed(1)}%`);
+            if (isRapidFire) reasons.push(`rapid_fire=${recentTxCount}tx`);
+            if (isCumulativeDrain) reasons.push(`cumulative=${cumulativeVolumePct.toFixed(1)}%`);
+            console.log(`\n🚨 [ELEVATED] Pre-screen triggered: ${reasons.join(", ")}. Freezing proactively.`);
+            if (!isFrozen) {
+              await triggerFreeze(user, `Pre-screen: ${reasons.join(", ")}`);
+            }
+          } else {
+            console.log(
+              `\n📋 [ROUTINE] Withdrawal is ${(withdrawalBps / 100).toFixed(2)}% of vault, ` +
+              `${recentTxCount} tx in window, ${cumulativeVolumePct.toFixed(1)}% cumulative. ` +
+              `Evaluating without proactive freeze.`
+            );
           }
 
           try {
@@ -260,7 +307,7 @@ async function main() {
             timestamp: Math.floor(Date.now() / 1000),
             wallet_address: user,
             withdrawal_amount_eth: formattedAmount,
-            withdrawal_amount_bps: totalDeposits > 0 ? Math.floor((formattedAmount / totalDeposits) * 10000) : 0,
+            withdrawal_amount_bps: withdrawalBps,
             vault_total_liquidity_eth: totalDeposits,
             wallet_registered: false,
             registered_withdrawal_wallet: "",
@@ -298,15 +345,31 @@ async function main() {
                 .eq("transaction_hash", log.transactionHash);
             } catch (e) {}
 
-            if (result.decision === "PROCEED" || result.decision === "DELAY_SHORT") {
-              await triggerEmergencyUnfreeze();
+            if (shouldProactiveFreeze) {
+              // We already froze — unfreeze only if AI says it's safe
+              if (result.decision === "PROCEED" || result.decision === "DELAY_SHORT") {
+                await triggerEmergencyUnfreeze();
+              } else {
+                console.log(`🚨 AI confirmed threat. Vault stays frozen.`);
+              }
             } else {
-              console.log(`🚨 AI determined threat. Vault stays completely frozen.`);
+              // We did NOT proactively freeze — freeze only if AI says it's dangerous
+              if (result.decision === "BLOCK" || result.decision === "DELAY_LONG") {
+                console.log(`🚨 AI detected threat on routine withdrawal. Freezing now.`);
+                await triggerFreeze(user, `AI verdict: ${result.decision} (risk=${result.risk_score})`);
+              } else {
+                console.log(`✅ AI cleared routine withdrawal. No action needed.`);
+              }
             }
           } catch (err: any) {
             console.error("AI Evaluation failed:", err.message);
-            console.log(`⚠️ AI offline. Falling back to PROCEED. Unfreezing vault.`);
-            await triggerEmergencyUnfreeze();
+            if (shouldProactiveFreeze) {
+              // AI offline but we already froze for a high-risk signal — stay frozen but with cooldown
+              console.log(`⚠️ AI offline. Vault stays frozen (high-risk signal). Cooldown will auto-unfreeze.`);
+            } else {
+              // AI offline for a routine withdrawal — no freeze needed
+              console.log(`⚠️ AI offline. Routine withdrawal — no action taken.`);
+            }
           }
         }
       }

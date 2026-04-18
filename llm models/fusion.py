@@ -129,8 +129,8 @@ def fuse(node_reports):
         decision = "BLOCK"
     elif aggregate_risk >= 0.45 or threat_count >= 2:
         decision = "DELAY_LONG"
-    elif aggregate_risk >= 0.25 or threat_count >= 1:
-        decision = "DELAY_SHORT"
+    elif aggregate_risk >= 0.30:
+        decision = "PROCEED"
     else:
         decision = "PROCEED"
 

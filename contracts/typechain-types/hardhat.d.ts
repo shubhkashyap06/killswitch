@@ -146,10 +146,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.KillswitchToken__factory>;
     getContractFactory(
-      name: "ITieredCircuitBreaker",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ITieredCircuitBreaker__factory>;
-    getContractFactory(
       name: "LiquidityVault",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.LiquidityVault__factory>;
@@ -336,11 +332,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.KillswitchToken>;
     getContractAt(
-      name: "ITieredCircuitBreaker",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ITieredCircuitBreaker>;
-    getContractAt(
       name: "LiquidityVault",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -498,10 +489,6 @@ declare module "hardhat/types/runtime" {
       name: "KillswitchToken",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.KillswitchToken>;
-    deployContract(
-      name: "ITieredCircuitBreaker",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ITieredCircuitBreaker>;
     deployContract(
       name: "LiquidityVault",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -688,11 +675,6 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.KillswitchToken>;
-    deployContract(
-      name: "ITieredCircuitBreaker",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ITieredCircuitBreaker>;
     deployContract(
       name: "LiquidityVault",
       args: any[],

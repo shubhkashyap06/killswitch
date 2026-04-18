@@ -28,9 +28,9 @@ def check_cold_stops(data):
     if data["gas_price_gwei"] > data["baseline_gas_price_gwei"] * 3:
         reasons.append("gas_price_anomaly_3x_baseline")
     
-    # Rule 6: Shallow unknown funding source
-    if data["funding_depth"] <= 1 and not data["funding_source_is_known_exchange"]:
-        reasons.append("shallow_unknown_funding_source")
+    # Rule 6: Shallow unknown funding source — only suspicious if wallet is also new
+    if data["funding_depth"] <= 1 and not data["funding_source_is_known_exchange"] and data["wallet_age_days"] < 7:
+        reasons.append("shallow_unknown_funding_new_wallet")
     
     if reasons:
         return {

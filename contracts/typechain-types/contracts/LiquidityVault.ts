@@ -31,6 +31,7 @@ export interface LiquidityVaultInterface extends Interface {
       | "balances"
       | "deposit"
       | "emergencyUnfreeze"
+      | "emergencyWithdraw"
       | "freeze"
       | "freezeDuration"
       | "frozen"
@@ -38,7 +39,6 @@ export interface LiquidityVaultInterface extends Interface {
       | "getRoleAdmin"
       | "grantRole"
       | "hasRole"
-      | "lastWithdrawTime"
       | "maxWithdrawAmount"
       | "maxWithdrawBps"
       | "renounceRole"
@@ -51,7 +51,6 @@ export interface LiquidityVaultInterface extends Interface {
       | "totalDeposits"
       | "unfreeze"
       | "withdraw"
-      | "withdrawCount60s"
   ): FunctionFragment;
 
   getEvent(
@@ -59,12 +58,10 @@ export interface LiquidityVaultInterface extends Interface {
       | "Deposit"
       | "EmergencyUnfreeze"
       | "Freeze"
-      | "FreezeDurationUpdated"
       | "MaxWithdrawBpsUpdated"
       | "RoleAdminChanged"
       | "RoleGranted"
       | "RoleRevoked"
-      | "SuspiciousActivity"
       | "Unfreeze"
       | "Withdraw"
   ): EventFragment;
@@ -89,6 +86,10 @@ export interface LiquidityVaultInterface extends Interface {
     functionFragment: "emergencyUnfreeze",
     values?: undefined
   ): string;
+  encodeFunctionData(
+    functionFragment: "emergencyWithdraw",
+    values: [AddressLike, AddressLike, BigNumberish]
+  ): string;
   encodeFunctionData(functionFragment: "freeze", values: [string]): string;
   encodeFunctionData(
     functionFragment: "freezeDuration",
@@ -107,10 +108,6 @@ export interface LiquidityVaultInterface extends Interface {
   encodeFunctionData(
     functionFragment: "hasRole",
     values: [BytesLike, AddressLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "lastWithdrawTime",
-    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "maxWithdrawAmount",
@@ -154,10 +151,6 @@ export interface LiquidityVaultInterface extends Interface {
     functionFragment: "withdraw",
     values: [BigNumberish]
   ): string;
-  encodeFunctionData(
-    functionFragment: "withdrawCount60s",
-    values: [AddressLike]
-  ): string;
 
   decodeFunctionResult(
     functionFragment: "DEFAULT_ADMIN_ROLE",
@@ -173,6 +166,10 @@ export interface LiquidityVaultInterface extends Interface {
     functionFragment: "emergencyUnfreeze",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "emergencyWithdraw",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "freeze", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "freezeDuration",
@@ -186,10 +183,6 @@ export interface LiquidityVaultInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "grantRole", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "lastWithdrawTime",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "maxWithdrawAmount",
     data: BytesLike
@@ -226,10 +219,6 @@ export interface LiquidityVaultInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "unfreeze", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "withdrawCount60s",
-    data: BytesLike
-  ): Result;
 }
 
 export namespace DepositEvent {
@@ -274,22 +263,6 @@ export namespace FreezeEvent {
     triggeredBy: string;
     at: bigint;
     reason: string;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace FreezeDurationUpdatedEvent {
-  export type InputTuple = [
-    oldDuration: BigNumberish,
-    newDuration: BigNumberish
-  ];
-  export type OutputTuple = [oldDuration: bigint, newDuration: bigint];
-  export interface OutputObject {
-    oldDuration: bigint;
-    newDuration: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -361,28 +334,6 @@ export namespace RoleRevokedEvent {
     role: string;
     account: string;
     sender: string;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace SuspiciousActivityEvent {
-  export type InputTuple = [
-    user: AddressLike,
-    withdrawCount: BigNumberish,
-    amount: BigNumberish
-  ];
-  export type OutputTuple = [
-    user: string,
-    withdrawCount: bigint,
-    amount: bigint
-  ];
-  export interface OutputObject {
-    user: string;
-    withdrawCount: bigint;
-    amount: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -474,6 +425,12 @@ export interface LiquidityVault extends BaseContract {
 
   emergencyUnfreeze: TypedContractMethod<[], [void], "nonpayable">;
 
+  emergencyWithdraw: TypedContractMethod<
+    [_token: AddressLike, to: AddressLike, amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
   freeze: TypedContractMethod<[reason: string], [void], "nonpayable">;
 
   freezeDuration: TypedContractMethod<[], [bigint], "view">;
@@ -496,8 +453,6 @@ export interface LiquidityVault extends BaseContract {
     "view"
   >;
 
-  lastWithdrawTime: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
-
   maxWithdrawAmount: TypedContractMethod<[], [bigint], "view">;
 
   maxWithdrawBps: TypedContractMethod<[], [bigint], "view">;
@@ -515,13 +470,13 @@ export interface LiquidityVault extends BaseContract {
   >;
 
   setFreezeDuration: TypedContractMethod<
-    [newDuration: BigNumberish],
+    [duration: BigNumberish],
     [void],
     "nonpayable"
   >;
 
   setMaxWithdrawBps: TypedContractMethod<
-    [newBps: BigNumberish],
+    [bps: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -542,8 +497,6 @@ export interface LiquidityVault extends BaseContract {
 
   withdraw: TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
 
-  withdrawCount60s: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
-
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
@@ -563,6 +516,13 @@ export interface LiquidityVault extends BaseContract {
   getFunction(
     nameOrSignature: "emergencyUnfreeze"
   ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "emergencyWithdraw"
+  ): TypedContractMethod<
+    [_token: AddressLike, to: AddressLike, amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "freeze"
   ): TypedContractMethod<[reason: string], [void], "nonpayable">;
@@ -593,9 +553,6 @@ export interface LiquidityVault extends BaseContract {
     "view"
   >;
   getFunction(
-    nameOrSignature: "lastWithdrawTime"
-  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
-  getFunction(
     nameOrSignature: "maxWithdrawAmount"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
@@ -617,10 +574,10 @@ export interface LiquidityVault extends BaseContract {
   >;
   getFunction(
     nameOrSignature: "setFreezeDuration"
-  ): TypedContractMethod<[newDuration: BigNumberish], [void], "nonpayable">;
+  ): TypedContractMethod<[duration: BigNumberish], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "setMaxWithdrawBps"
-  ): TypedContractMethod<[newBps: BigNumberish], [void], "nonpayable">;
+  ): TypedContractMethod<[bps: BigNumberish], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "supportsInterface"
   ): TypedContractMethod<[interfaceId: BytesLike], [boolean], "view">;
@@ -639,9 +596,6 @@ export interface LiquidityVault extends BaseContract {
   getFunction(
     nameOrSignature: "withdraw"
   ): TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "withdrawCount60s"
-  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
 
   getEvent(
     key: "Deposit"
@@ -663,13 +617,6 @@ export interface LiquidityVault extends BaseContract {
     FreezeEvent.InputTuple,
     FreezeEvent.OutputTuple,
     FreezeEvent.OutputObject
-  >;
-  getEvent(
-    key: "FreezeDurationUpdated"
-  ): TypedContractEvent<
-    FreezeDurationUpdatedEvent.InputTuple,
-    FreezeDurationUpdatedEvent.OutputTuple,
-    FreezeDurationUpdatedEvent.OutputObject
   >;
   getEvent(
     key: "MaxWithdrawBpsUpdated"
@@ -698,13 +645,6 @@ export interface LiquidityVault extends BaseContract {
     RoleRevokedEvent.InputTuple,
     RoleRevokedEvent.OutputTuple,
     RoleRevokedEvent.OutputObject
-  >;
-  getEvent(
-    key: "SuspiciousActivity"
-  ): TypedContractEvent<
-    SuspiciousActivityEvent.InputTuple,
-    SuspiciousActivityEvent.OutputTuple,
-    SuspiciousActivityEvent.OutputObject
   >;
   getEvent(
     key: "Unfreeze"
@@ -755,17 +695,6 @@ export interface LiquidityVault extends BaseContract {
       FreezeEvent.OutputObject
     >;
 
-    "FreezeDurationUpdated(uint256,uint256)": TypedContractEvent<
-      FreezeDurationUpdatedEvent.InputTuple,
-      FreezeDurationUpdatedEvent.OutputTuple,
-      FreezeDurationUpdatedEvent.OutputObject
-    >;
-    FreezeDurationUpdated: TypedContractEvent<
-      FreezeDurationUpdatedEvent.InputTuple,
-      FreezeDurationUpdatedEvent.OutputTuple,
-      FreezeDurationUpdatedEvent.OutputObject
-    >;
-
     "MaxWithdrawBpsUpdated(uint256,uint256)": TypedContractEvent<
       MaxWithdrawBpsUpdatedEvent.InputTuple,
       MaxWithdrawBpsUpdatedEvent.OutputTuple,
@@ -808,17 +737,6 @@ export interface LiquidityVault extends BaseContract {
       RoleRevokedEvent.InputTuple,
       RoleRevokedEvent.OutputTuple,
       RoleRevokedEvent.OutputObject
-    >;
-
-    "SuspiciousActivity(address,uint256,uint256)": TypedContractEvent<
-      SuspiciousActivityEvent.InputTuple,
-      SuspiciousActivityEvent.OutputTuple,
-      SuspiciousActivityEvent.OutputObject
-    >;
-    SuspiciousActivity: TypedContractEvent<
-      SuspiciousActivityEvent.InputTuple,
-      SuspiciousActivityEvent.OutputTuple,
-      SuspiciousActivityEvent.OutputObject
     >;
 
     "Unfreeze(address,uint256)": TypedContractEvent<

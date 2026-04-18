@@ -1,18 +1,20 @@
 import os
 
 excludes = ['node_modules', '.git', 'dist', 'build', 'artifacts', 'cache', 'typechain-types', 'package-lock.json', '.next']
-extensions = ['.tsx', '.ts', '.sol', '.md', '.json', '.mjs', '.cjs']
+extensions = ['.tsx', '.ts', '.sol', '.md', '.json', '.mjs', '.cjs', '.py']
 
 replacements = {
-    'VULTRA NODE': 'Killswitch',
-    'VULTRA-NODE': 'killswitch',
-    'Vultra Node': 'Killswitch',
-    'Vault Sentinel': 'Killswitch',
-    'VaultSentinel': 'Killswitch',
-    'VULTRA': 'KILLSWITCH',
-    'Vultra': 'Killswitch',
-    'vultra-node': 'killswitch',
-    'vultra': 'killswitch',
+    'Killswitch': 'Killswitch',
+    'killswitch': 'killswitch',
+    'Killswitch': 'Killswitch',
+    'Killswitch': 'Killswitch',
+    'Killswitch': 'Killswitch',
+    'KILLSWITCH': 'KILLSWITCH',
+    'KillswitchToken': 'KillswitchToken',
+    'Killswitch': 'Killswitch',
+    'killswitch': 'killswitch',
+    'killswitch-sdk': 'killswitch-sdk',
+    'killswitch': 'killswitch',
 }
 
 for root, dirs, files in os.walk('.'):

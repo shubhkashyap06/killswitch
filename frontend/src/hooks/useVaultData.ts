@@ -48,6 +48,16 @@ export function useVaultData(): VaultData {
     const poll = async () => {
       try {
         const provider = getProvider();
+        
+        // Connectivity check
+        try {
+          await provider.getNetwork();
+        } catch (e) {
+          console.error("RPC Connection Error:", e);
+          _provider = null; // force recreation on next tick
+          return;
+        }
+
         const vault     = new ethers.Contract(VAULT_ADDRESS, VaultABI.abi, provider);
         const token     = new ethers.Contract(TOKEN_ADDRESS, TokenABI.abi, provider);
 
@@ -62,15 +72,15 @@ export function useVaultData(): VaultData {
           userVaultRaw,
           userTokenRaw,
         ] = await Promise.all([
-          vault.totalDeposits(),
-          vault.frozen(),
-          vault.frozenAt(),
-          vault.freezeDuration(),
-          vault.maxWithdrawBps(),
-          vault.timeLockRemaining(),
-          vault.maxWithdrawAmount(),
-          address ? vault.balances(address) : Promise.resolve(0n),
-          address ? token.balanceOf(address) : Promise.resolve(0n),
+          vault.totalDeposits().catch(() => 0n),
+          vault.frozen().catch(() => false),
+          vault.frozenAt().catch(() => 0n),
+          vault.freezeDuration().catch(() => 0n),
+          vault.maxWithdrawBps().catch(() => 3000n),
+          vault.timeLockRemaining().catch(() => 0n),
+          vault.maxWithdrawAmount().catch(() => 0n),
+          address ? vault.balances(address).catch(() => 0n) : Promise.resolve(0n),
+          address ? token.balanceOf(address).catch(() => 0n) : Promise.resolve(0n),
         ]);
 
         if (!mountedRef.current) return;
@@ -87,8 +97,8 @@ export function useVaultData(): VaultData {
           userTokenBalance:  Number(ethers.formatEther(userTokenRaw)),
           loading:           false,
         });
-      } catch {
-        // swallow transient RPC errors
+      } catch (err) {
+        console.error("Vault Data Fetch Error:", err);
       }
     };
 

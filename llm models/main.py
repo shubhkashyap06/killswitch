@@ -11,7 +11,7 @@ from agent import analyze_with_agent
 from monitor import analyze_post_withdrawal
 import uvicorn
 
-app = FastAPI(title="Vultra-Node AI Layer")
+app = FastAPI(title="Killswitch-Node AI Layer")
 
 class RecentTransaction(BaseModel):
     timestamp: int

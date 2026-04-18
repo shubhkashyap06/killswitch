@@ -319,7 +319,7 @@ def test_monitor_escalating():
 # ============================================================
 
 if __name__ == "__main__":
-    print("Starting Vultra-Node API Tests...")
+    print("Starting Killswitch-Node API Tests...")
     print("Make sure main.py is running in another terminal first\n")
 
     print("\n" + "="*50)

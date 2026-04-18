@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0, 'C:/CodeBlooded/vultra-node')
+sys.path.insert(0, 'C:/CodeBlooded/killswitch')
 
 from agent import analyze_with_agent
 import json

@@ -1,5 +1,6 @@
 import * as React from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useConnect } from "wagmi";
+import { injected } from "wagmi/connectors";
 import { useNavigate } from "react-router-dom";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
@@ -8,6 +9,8 @@ import { cn } from "@/lib/utils";
 
 const Landing = () => {
   const { isConnected } = useAccount();
+  const { connectAsync } = useConnect();
+  const [isConnecting, setIsConnecting] = React.useState(false);
   const navigate = useNavigate();
 
   // 3D Parallax Mouse Tracking
@@ -18,18 +21,35 @@ const Landing = () => {
   const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["10deg", "-10deg"]);
   const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-10deg", "10deg"]);
 
+  // Auto-navigate to dashboard when wallet connects
+  React.useEffect(() => {
+    if (isConnected) {
+      const timer = setTimeout(() => navigate("/dashboard"), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [isConnected, navigate]);
+
+  const handleConnect = async () => {
+    try {
+      if (isConnected) {
+        navigate("/dashboard");
+        return;
+      }
+      setIsConnecting(true);
+      await connectAsync({ connector: injected() });
+      // useEffect will handle navigation
+    } catch (err: any) {
+      console.error("Connection failed", err);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
   const handleMouseMove = (e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect();
     x.set(e.clientX / rect.width - 0.5);
     y.set(e.clientY / rect.height - 0.5);
   };
-
-  // Auto-navigate to dashboard when wallet connects
-  React.useEffect(() => {
-    if (isConnected) {
-      setTimeout(() => navigate("/"), 600);
-    }
-  }, [isConnected, navigate]);
 
   return (
     <div
@@ -71,7 +91,7 @@ const Landing = () => {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
           </span>
-          <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-primary/80">Guardian Protocol v3.2 Live · Hardhat</span>
+          <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-primary/80">Killswitch Protocol v3.2 Live · Hardhat</span>
         </motion.div>
 
         {/* Main Hero */}
@@ -87,15 +107,15 @@ const Landing = () => {
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.3 }}
             className="text-6xl md:text-8xl font-bold tracking-tighter mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/20"
           >
-            VAULT SENTINEL
+            KILLSWITCH
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.4 }}
             className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light"
           >
-            The elite security layer for high-net-worth digital assets.
-            Real-time heuristic protection with zero-latency circuit breakers.
+            The elite safety layer for high-net-worth digital assets.
+            Real-time organic threat detection with zero-latency circuit breakers.
           </motion.p>
         </div>
 
@@ -109,11 +129,14 @@ const Landing = () => {
             <ConnectButton.Custom>
               {({ account, chain, openConnectModal, mounted, ready }) => {
                 const connected = ready && account && chain;
+                if (!mounted) return <div className="h-[60px] w-[280px]" />; // spacer
+                
                 return (
                   <button
-                    onClick={connected ? () => navigate("/") : openConnectModal}
+                    onClick={handleConnect}
+                    disabled={isConnecting}
                     className={cn(
-                      "relative group px-10 py-5 font-bold rounded-2xl overflow-hidden transition-all hover:scale-105 active:scale-95",
+                      "relative group px-10 py-5 font-bold rounded-2xl overflow-hidden transition-all hover:scale-105 active:scale-95 disabled:opacity-50",
                       connected
                         ? "bg-green-600 text-white shadow-[0_20px_50px_rgba(22,163,74,0.4)]"
                         : "bg-primary text-black shadow-[0_20px_50px_rgba(30,58,138,0.3)]"
@@ -121,7 +144,7 @@ const Landing = () => {
                   >
                     <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                     <span className="relative z-10 flex items-center gap-3 text-[14px] uppercase tracking-widest">
-                      {connected ? `Enter Dashboard → ${account.displayName}` : "Connect MetaMask"}
+                      {isConnecting ? "Connecting..." : connected ? `Enter Dashboard → ${account.displayName}` : "Connect MetaMask"}
                       <ChevronRight className="h-4 w-4" />
                     </span>
                   </button>

@@ -17,12 +17,14 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const configPath = path.resolve(__dirname, "./config.json");
 const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
 
+// Hardhat signer[1] = Guardian address: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
 const GUARDIAN_PRIVATE_KEY =
   process.env.GUARDIAN_PRIVATE_KEY ||
-  "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+  "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d";
 
+// Hardhat signer[0] = Admin/Deployer address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
 const ADMIN_PRIVATE_KEY =
-  process.env.ADMIN_PRIVATE_KEY || 
+  process.env.ADMIN_PRIVATE_KEY ||
   "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 
 // ─── ALERT HELPER ─────────────────────────────────────────────────────────────
@@ -343,12 +345,7 @@ async function main() {
   app.post("/api/execute-unfreeze", async (req, res) => {
     try {
       console.log(`\n⚙️  Executing on-chain emergencyUnfreeze as ADMIN…`);
-      const adminWallet = new ethers.Wallet(
-        "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
-        provider
-      );
-      const adminVault = new ethers.Contract(VAULT_ADDRESS, vaultArtifact.abi, adminWallet);
-      const tx = await adminVault.emergencyUnfreeze();
+      const tx = await vaultContractAdmin.emergencyUnfreeze();
       await tx.wait();
       isFrozen = false;
       console.log(`✅ Vault unfrozen. TX: ${tx.hash}`);
@@ -363,18 +360,13 @@ async function main() {
   app.post("/api/authorize-large-withdrawal", async (req, res) => {
     try {
       console.log(`\n⚙️  Authorizing large withdrawal (lifting cap to 100%)…`);
-      const adminWallet = new ethers.Wallet(
-        "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
-        provider
-      );
-      const adminVault = new ethers.Contract(VAULT_ADDRESS, vaultArtifact.abi, adminWallet);
-      const tx = await adminVault.setMaxWithdrawBps(10000);
+      const tx = await vaultContractAdmin.setMaxWithdrawBps(10000);
       await tx.wait();
       console.log(`✅ Cap lifted to 100%. TX: ${tx.hash}`);
       // Auto-restore after 60s
       setTimeout(async () => {
         try {
-          const resetTx = await adminVault.setMaxWithdrawBps(3000);
+          const resetTx = await vaultContractAdmin.setMaxWithdrawBps(3000);
           await resetTx.wait();
           console.log(`✅ Cap restored to 30%. TX: ${resetTx.hash}`);
         } catch (e: any) {

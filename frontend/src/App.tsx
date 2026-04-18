@@ -27,12 +27,12 @@ const PageTracker = () => {
   const location = useLocation();
   useEffect(() => {
     const titleMap: Record<string, string> = {
-      "/":             "Dashboard | Killswitch",
-      "/transactions": "Ledger | Killswitch",
-      "/alerts":       "Incidents | Killswitch",
-      "/analytics":    "Intelligence | Killswitch",
-      "/settings":     "Governance | Killswitch",
-      "/landing":      "Welcome | Killswitch",
+      "/":              "Welcome | Killswitch",
+      "/dashboard":      "Dashboard | Killswitch",
+      "/transactions":  "Ledger | Killswitch",
+      "/alerts":        "Incidents | Killswitch",
+      "/analytics":     "Intelligence | Killswitch",
+      "/settings":      "Governance | Killswitch",
     };
     document.title = titleMap[location.pathname] || "Killswitch";
   }, [location]);
@@ -44,7 +44,7 @@ function RequireWallet({ children }: { children: React.ReactNode }) {
   const { isConnected, isReconnecting } = useAccount();
   // Wait for reconnecting to settle before redirect
   if (isReconnecting) return null;
-  if (!isConnected) return <Navigate to="/landing" replace />;
+  if (!isConnected) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -65,11 +65,11 @@ const AnimatedRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        {/* Public */}
-        <Route path="/landing" element={<PageTransition><Landing /></PageTransition>} />
+        {/* Public Landing */}
+        <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
 
         {/* Protected — wallet required */}
-        <Route path="/"             element={<RequireWallet><PageTransition><Index /></PageTransition></RequireWallet>} />
+        <Route path="/dashboard"    element={<RequireWallet><PageTransition><Index /></PageTransition></RequireWallet>} />
         <Route path="/transactions" element={<RequireWallet><PageTransition><Transactions /></PageTransition></RequireWallet>} />
         <Route path="/alerts"       element={<RequireWallet><PageTransition><Alerts /></PageTransition></RequireWallet>} />
         <Route path="/analytics"    element={<RequireWallet><PageTransition><Analytics /></PageTransition></RequireWallet>} />

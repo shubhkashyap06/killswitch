@@ -12,7 +12,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 
 const items = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/transactions", label: "Transactions", icon: ArrowLeftRight },
   { to: "/alerts", label: "Alerts", icon: Bell },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },

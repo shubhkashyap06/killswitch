@@ -81,7 +81,7 @@ contract TieredCircuitBreaker is Initializable, AccessControlUpgradeable, UUPSUp
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        _disableInitializers();
+        // _disableInitializers();
     }
 
     /**
@@ -93,7 +93,6 @@ contract TieredCircuitBreaker is Initializable, AccessControlUpgradeable, UUPSUp
         uint256 _maxUserWithdrawPerEpoch
     ) public initializer {
         __AccessControl_init();
-        __UUPSUpgradeable_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(UPGRADER_ROLE, admin);

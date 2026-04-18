@@ -19,7 +19,7 @@ import nodes.node3_velocity as node3
 import nodes.node4_exploit as node4
 
 
-class VultraState(TypedDict):
+class KillswitchState(TypedDict):
     transaction_data: dict
     cold_stop_triggered: bool
     cold_stop_reasons: List[str]
@@ -36,7 +36,7 @@ class VultraState(TypedDict):
     delay_seconds: Optional[int]
 
 
-def cold_stop_node(state: VultraState) -> VultraState:
+def cold_stop_node(state: KillswitchState) -> KillswitchState:
     print("[Agent] Running cold stop checks...")
     result = check_cold_stops(state["transaction_data"])
     return {
@@ -46,7 +46,7 @@ def cold_stop_node(state: VultraState) -> VultraState:
     }
 
 
-def specialist_nodes(state: VultraState) -> VultraState:
+def specialist_nodes(state: KillswitchState) -> KillswitchState:
     print("[Agent] Running 4 specialist nodes in parallel...")
     transaction_data = state["transaction_data"]
 
@@ -68,7 +68,7 @@ def specialist_nodes(state: VultraState) -> VultraState:
     return {**state, "node_reports": reports}
 
 
-def fusion_node(state: VultraState) -> VultraState:
+def fusion_node(state: KillswitchState) -> KillswitchState:
     print("[Agent] Running weighted fusion...")
     result = fuse(state["node_reports"])
     print(f"  Aggregate risk: {result['aggregate_risk']}")
@@ -82,7 +82,7 @@ def fusion_node(state: VultraState) -> VultraState:
     }
 
 
-def borderline_check_node(state: VultraState) -> VultraState:
+def borderline_check_node(state: KillswitchState) -> KillswitchState:
     risk = state["aggregate_risk"]
     reeval_count = state.get("reeval_count", 0)
     is_borderline = 0.25 <= risk <= 0.55
@@ -96,7 +96,7 @@ def borderline_check_node(state: VultraState) -> VultraState:
     return {**state, "needs_reeval": should_reeval}
 
 
-def reeval_node(state: VultraState) -> VultraState:
+def reeval_node(state: KillswitchState) -> KillswitchState:
     print("[Agent] Running re-evaluation pass...")
     transaction_data = state["transaction_data"]
     previous_reports = state["node_reports"]
@@ -150,7 +150,7 @@ def reeval_node(state: VultraState) -> VultraState:
     }
 
 
-def final_decision_node(state: VultraState) -> VultraState:
+def final_decision_node(state: KillswitchState) -> KillswitchState:
     DELAY_MAP = {
         "PROCEED":     0,
         "DELAY_SHORT": 60,
@@ -183,21 +183,21 @@ def final_decision_node(state: VultraState) -> VultraState:
     }
 
 
-def route_after_cold_stop(state: VultraState) -> str:
+def route_after_cold_stop(state: KillswitchState) -> str:
     if state["cold_stop_triggered"]:
         print("[Agent] Cold stop triggered. Skipping AI.")
         return "final_decision"
     return "specialist_nodes"
 
 
-def route_after_borderline_check(state: VultraState) -> str:
+def route_after_borderline_check(state: KillswitchState) -> str:
     if state["needs_reeval"]:
         return "reeval"
     return "final_decision"
 
 
 def build_agent():
-    graph = StateGraph(VultraState)
+    graph = StateGraph(KillswitchState)
 
     graph.add_node("cold_stop", cold_stop_node)
     graph.add_node("specialist_nodes", specialist_nodes)
@@ -235,7 +235,7 @@ def build_agent():
     return graph.compile()
 
 
-vultra_agent = build_agent()
+killswitch_agent = build_agent()
 
 
 def analyze_with_agent(transaction_data: dict) -> dict:
@@ -256,7 +256,7 @@ def analyze_with_agent(transaction_data: dict) -> dict:
         "delay_seconds": 0
     }
 
-    result = vultra_agent.invoke(initial_state)
+    result = killswitch_agent.invoke(initial_state)
 
     return {
         "decision": result["final_decision"],

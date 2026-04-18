@@ -24,7 +24,7 @@ const VAULT_ABI = [
 
 const TOKEN_ABI = [
   "function approve(address spender, uint256 amount) external returns (bool)",
-  "function balanceOf(address account) external view returns (bool)",
+  "function balanceOf(address account) external view returns (uint256)",
   "function transfer(address to, uint256 amount) external returns (bool)"
 ];
 
@@ -89,6 +89,8 @@ async function main() {
       break;
     }
   }
+
+  console.log(hackerGreen("\n██████████  ATTACK STATUS: FAILED  ██████████\n"));
 }
 
 main().catch((e) => {

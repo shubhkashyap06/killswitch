@@ -59,8 +59,34 @@ const Index = () => {
       <div className="relative flex flex-1 flex-col overflow-hidden">
         <Topbar status={status} />
         <main className="scrollbar-thin relative flex-1 overflow-y-auto">
-          <div className="pointer-events-none absolute inset-0 bg-grid opacity-[0.35]" />
-          <div className="relative mx-auto w-full max-w-[1400px] px-6 py-6">
+          {frozen && (
+            <div className="absolute inset-0 z-0 bg-critical/5 pointer-events-none transition-colors duration-1000" />
+          )}
+          <div className="pointer-events-none absolute inset-0 z-0 bg-grid opacity-[0.35]" />
+          
+          <div className="relative z-10 mx-auto w-full max-w-[1400px] px-6 py-6">
+
+            {/* Global Freeze Banner */}
+            {frozen && (
+              <motion.div 
+                initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
+                className="mb-6 flex items-center justify-between overflow-hidden rounded-lg border border-critical/30 bg-critical/10 shadow-[0_0_20px_rgba(255,0,0,0.1)]"
+              >
+                <div className="flex flex-1 items-center gap-4 px-4 py-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-critical/20 animate-pulse">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--critical))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="2" x2="12" y2="12"></line>
+                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-[13px] font-bold tracking-widest text-critical uppercase">System Frozen</h3>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">The Guardian AI has engaged the circuit breaker. Withdrawals are halted. Emergency unstaking remains active.</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
             {/* Page heading */}
             <header className="mb-6 flex items-end justify-between">
@@ -115,9 +141,8 @@ const Index = () => {
               />
             </section>
 
-            {/* Main grid */}
-            <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-              {/* Threat meter */}
+            {/* Threat meter row */}
+            <section className="mt-6">
               <motion.div
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
                 className="rounded-lg border border-hairline bg-card"
@@ -135,19 +160,21 @@ const Index = () => {
                   </div>
                 </div>
               </motion.div>
+            </section>
 
-              {/* Liquidity chart */}
+            {/* Liquidity chart — full width, tall */}
+            <section className="mt-4">
               <motion.div
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.05 }}
-                className="rounded-lg border border-hairline bg-card lg:col-span-2"
+                className="rounded-lg border border-hairline bg-card"
               >
-                <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
+                <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
                   <h3 className="text-[12px] font-semibold tracking-tight">Liquidity · VLT Vault</h3>
                   <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                    {frozen ? "⚠ FROZEN" : "Live"}
+                    {frozen ? "⚠ FROZEN" : "Live · On-Chain"}
                   </span>
                 </div>
-                <div className="px-4 py-5">
+                <div className="px-5 py-5">
                   <CandleChart data={candles} frozen={frozen} />
                 </div>
               </motion.div>
@@ -265,47 +292,60 @@ function VaultAction({
 
     setLoading(true);
     try {
-      // Switch to Hardhat if needed
+      console.log(`Starting ${type} transaction for ${amount} VLT...`);
+      
+      // Step 0: Ensure we are on the right chain
       if (chainId !== CHAIN_ID) {
-        setStep("Switching to Hardhat network…");
-        await switchChainAsync({ chainId: CHAIN_ID });
+        setStep("Wait: Switching MetaMask to Hardhat (31337)...");
+        try {
+          await switchChainAsync({ chainId: CHAIN_ID });
+        } catch (switchError: any) {
+          console.error("Chain switch failed", switchError);
+          toast.error("Please switch your MetaMask to the Hardhat network manually.");
+          return;
+        }
       }
 
       const parsed = parseEther(amount);
 
       if (type === "deposit") {
-        setStep("Step 1/2: Approving VLT spend…");
-        await writeContractAsync({
+        setStep("Step 1/2: Approve VLT in MetaMask...");
+        const approveTx = await writeContractAsync({
           chainId: CHAIN_ID,
           address: TOKEN_ADDRESS,
           abi: TokenABI.abi as any,
           functionName: "approve",
           args: [VAULT_ADDRESS, parsed],
         });
-        setStep("Step 2/2: Depositing to vault…");
-        await writeContractAsync({
+        console.log("Approval TX:", approveTx);
+
+        setStep("Step 2/2: Confirm Deposit in MetaMask...");
+        const depositTx = await writeContractAsync({
           chainId: CHAIN_ID,
           address: VAULT_ADDRESS,
           abi: VaultABI.abi as any,
           functionName: "deposit",
           args: [parsed],
         });
-        toast.success(`Deposited ${amt} VLT to the vault!`);
+        console.log("Deposit TX:", depositTx);
+        toast.success(`Successfully deposited ${amt} VLT!`);
       } else {
-        setStep("Sending withdrawal transaction…");
-        await writeContractAsync({
+        setStep("Confirm Withdrawal in MetaMask...");
+        const withdrawTx = await writeContractAsync({
           chainId: CHAIN_ID,
           address: VAULT_ADDRESS,
           abi: VaultABI.abi as any,
           functionName: "withdraw",
           args: [parsed],
         });
-        toast.success(`Withdrew ${amt} VLT from the vault!`);
+        console.log("Withdrawal TX:", withdrawTx);
+        toast.success(`Successfully withdrew ${amt} VLT!`);
       }
 
       setOpen(false);
       setAmount("");
     } catch (err: any) {
+      console.error("Transaction Error:", err);
       const msg = err?.shortMessage || err?.message || "Transaction failed";
       toast.error(msg.slice(0, 120));
     } finally {

@@ -1,0 +1,191 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* KillSwitch — DeFi security dashboard design system.
+   Matte dark, restrained, Bloomberg/Linear-inspired. All colors HSL. */
+
+@layer base {
+  :root {
+    /* Light mode kept neutral but app defaults to dark */
+    --background: 0 0% 100%;
+    --foreground: 222 20% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 20% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 20% 12%;
+    --primary: 222 20% 12%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 20% 12%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 222 20% 12%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 222 20% 12%;
+    --radius: 0.625rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5% 26%;
+    --sidebar-primary: 240 6% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 5% 96%;
+    --sidebar-accent-foreground: 240 6% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217 91% 60%;
+  }
+
+  .dark {
+    /* Matte dark — no pure black, no glossy surfaces */
+    --background: 220 14% 6%;
+    --foreground: 220 14% 92%;
+
+    --card: 220 13% 9%;
+    --card-foreground: 220 14% 92%;
+
+    --popover: 220 13% 9%;
+    --popover-foreground: 220 14% 92%;
+
+    --primary: 220 14% 92%;
+    --primary-foreground: 220 14% 8%;
+
+    --secondary: 220 12% 13%;
+    --secondary-foreground: 220 14% 92%;
+
+    --muted: 220 12% 13%;
+    --muted-foreground: 220 9% 55%;
+
+    --accent: 220 12% 14%;
+    --accent-foreground: 220 14% 92%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 12% 16%;
+    --input: 220 12% 16%;
+    --ring: 220 14% 70%;
+
+    /* Status semantics */
+    --success: 152 60% 45%;
+    --success-foreground: 220 14% 8%;
+    --warning: 41 92% 55%;
+    --warning-foreground: 220 14% 8%;
+    --critical: 0 75% 56%;
+    --critical-foreground: 0 0% 98%;
+
+    /* Surfaces */
+    --surface-1: 220 13% 9%;
+    --surface-2: 220 12% 11%;
+    --surface-3: 220 12% 14%;
+    --hairline: 220 12% 18%;
+
+    /* Subtle elevation */
+    --shadow-sm: 0 1px 0 0 hsl(220 14% 100% / 0.03) inset, 0 1px 2px 0 hsl(0 0% 0% / 0.4);
+    --shadow-md: 0 1px 0 0 hsl(220 14% 100% / 0.04) inset, 0 8px 24px -12px hsl(0 0% 0% / 0.6);
+
+    --sidebar-background: 220 14% 7%;
+    --sidebar-foreground: 220 10% 70%;
+    --sidebar-primary: 220 14% 92%;
+    --sidebar-primary-foreground: 220 14% 8%;
+    --sidebar-accent: 220 12% 12%;
+    --sidebar-accent-foreground: 220 14% 92%;
+    --sidebar-border: 220 12% 14%;
+    --sidebar-ring: 220 14% 70%;
+  }
+}
+
+@layer base {
+  /* Premium Global Scrollbar */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--hairline));
+    border-radius: 10px;
+    transition: background 0.3s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  /* Selection Polish */
+  ::selection {
+    background: hsl(var(--primary) / 0.15);
+    color: hsl(var(--primary));
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    font-feature-settings: "ss01", "cv11", "tnum";
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Outfit', ui-sans-serif, system-ui, -apple-system, "Inter", sans-serif;
+  }
+  /* Tabular numerics for data UIs */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+}
+
+@layer utilities {
+  .hairline {
+    background-color: hsl(var(--hairline));
+  }
+  .surface-1 { background-color: hsl(var(--surface-1)); }
+  .surface-2 { background-color: hsl(var(--surface-2)); }
+  .surface-3 { background-color: hsl(var(--surface-3)); }
+
+  .text-success { color: hsl(var(--success)); }
+  .text-warning { color: hsl(var(--warning)); }
+  .text-critical { color: hsl(var(--critical)); }
+  .bg-success { background-color: hsl(var(--success)); }
+  .bg-warning { background-color: hsl(var(--warning)); }
+  .bg-critical { background-color: hsl(var(--critical)); }
+
+  /* Subtle grid backdrop, professional, not flashy */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, hsl(var(--hairline) / 0.5) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--hairline) / 0.5) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  /* Custom inner scrollbar for cards */
+  .scrollbar-thin::-webkit-scrollbar { width: 4px; height: 4px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--hairline));
+    border-radius: 999px;
+  }
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 hsl(var(--critical) / 0.35); }
+  70% { box-shadow: 0 0 0 18px hsl(var(--critical) / 0); }
+  100% { box-shadow: 0 0 0 0 hsl(var(--critical) / 0); }
+}
+.pulse-ring { animation: pulse-ring 1.8s cubic-bezier(.4,0,.6,1) infinite; }
+
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.ticker-track { animation: ticker 40s linear infinite; }

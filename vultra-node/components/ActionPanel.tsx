@@ -13,7 +13,7 @@ import TokenABI from "@/lib/abis/VultraToken.json";
 import { supabase } from "@/lib/supabase";
 
 const VAULT_ADDRESS = process.env.NEXT_PUBLIC_VAULT_ADDRESS as `0x${string}`;
-const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VLT_TOKEN_ADDRESS as `0x${string}`;
+const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS as `0x${string}`;
 const ENGINE_URL = "http://localhost:3001";
 
 export default function ActionPanel() {

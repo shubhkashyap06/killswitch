@@ -1,103 +1,194 @@
 import { ethers } from "hardhat";
-import * as fs from "fs";
-import * as path from "path";
+import fs from "fs";
+import path from "path";
 
 async function main() {
-  const [deployer] = await ethers.getSigners();
-  console.log("\n🚀 Deploying Vultra-Node contracts...");
-  console.log(`   Deployer: ${deployer.address}`);
-
-  const balance = await ethers.provider.getBalance(deployer.address);
-  console.log(`   Balance:  ${ethers.formatEther(balance)} ETH\n`);
-
-  // ── 1. Deploy VultraToken ────────────────────────────────────────────────
-  console.log("📦 Deploying VultraToken...");
+  console.log("🚀 Deploying Vultra-Node contracts...\n");
+ 
+  // ─── SIGNERS ────────────────────────────────────────────────────────────────
+  const [
+    deployer,   
+    guardian,   
+    user1,      
+    user2,      
+    user3,      
+    attacker,   
+  ] = await ethers.getSigners();
+ 
+  console.log("👤 Deployer (Admin):", deployer.address);
+  console.log("🛡️  Guardian:        ", guardian.address);
+  console.log("👥 User1:           ", user1.address);
+  console.log("💀 Attacker:        ", attacker.address);
+  console.log();
+ 
+  // ─── DEPLOY TOKEN ────────────────────────────────────────────────────────────
   const VultraToken = await ethers.getContractFactory("VultraToken");
   const token = await VultraToken.deploy(deployer.address);
   await token.waitForDeployment();
   const tokenAddress = await token.getAddress();
-  console.log(`   ✅ VultraToken deployed at: ${tokenAddress}`);
-
-  // ── 2. Deploy LiquidityVault ─────────────────────────────────────────────
-  console.log("\n📦 Deploying LiquidityVault...");
-
-  const ADMIN_ADDRESS    = deployer.address;
-  // In production: set GUARDIAN to your monitoring engine wallet address
-  const GUARDIAN_ADDRESS = process.env.GUARDIAN_ADDRESS || deployer.address;
-  const FREEZE_DURATION  = 60 * 60; // 1 hour in seconds
-  const MAX_WITHDRAW_BPS = 3000;    // 30%
-
+  console.log("✅ VultraToken deployed:", tokenAddress);
+ 
+  // ─── DEPLOY VAULT ────────────────────────────────────────────────────────────
+  const guardians = [guardian.address];
+  const requiredVotes = 1; 
+  const freezeDuration = 3600;
+  const maxWithdrawBps = 3000;
+ 
   const LiquidityVault = await ethers.getContractFactory("LiquidityVault");
+  
+  // Adjusted to match the LiquidityVault.sol constructor we currently have
   const vault = await LiquidityVault.deploy(
     tokenAddress,
-    ADMIN_ADDRESS,
-    GUARDIAN_ADDRESS,
-    FREEZE_DURATION,
-    MAX_WITHDRAW_BPS
+    deployer.address, // admin
+    guardian.address, // guardian (for local non-BFT constructor compatibility)
+    freezeDuration,
+    maxWithdrawBps
   );
   await vault.waitForDeployment();
   const vaultAddress = await vault.getAddress();
-  console.log(`   ✅ LiquidityVault deployed at: ${vaultAddress}`);
-  console.log(`      Admin:           ${ADMIN_ADDRESS}`);
-  console.log(`      Guardian:        ${GUARDIAN_ADDRESS}`);
-  console.log(`      Freeze Duration: ${FREEZE_DURATION}s (${FREEZE_DURATION / 3600}h)`);
-  console.log(`      Max Withdraw:    ${MAX_WITHDRAW_BPS / 100}%`);
-
-  // ── 3. Save deployment addresses ────────────────────────────────────────
-  const deployment = {
-    network: (await ethers.provider.getNetwork()).name,
-    chainId: Number((await ethers.provider.getNetwork()).chainId),
+  console.log("✅ LiquidityVault deployed:", vaultAddress);
+  console.log(`   Guardian: ${guardian.address}`);
+  console.log(`   Required votes to freeze: ${requiredVotes}`);
+  console.log();
+ 
+  // ─── FUND TEST ACCOUNTS WITH TOKENS ──────────────────────────────────────────
+  const FUND_AMOUNT = ethers.parseEther("1000"); 
+ 
+  const usersToFund = [
+    { wallet: user1,    label: "User1" },
+    { wallet: user2,    label: "User2" },
+    { wallet: user3,    label: "User3" },
+    { wallet: attacker, label: "Attacker" },
+  ];
+ 
+  for (const { wallet, label } of usersToFund) {
+    const tx = await token.transfer(wallet.address, FUND_AMOUNT);
+    await tx.wait();
+    console.log(`💸 Funded ${label} (${wallet.address.slice(0, 8)}...) with 1000 VLT`);
+  }
+  console.log();
+ 
+  // ─── SEED VAULT WITH INITIAL LIQUIDITY ───────────────────────────────────────
+  const SEED_AMOUNT = ethers.parseEther("5000");
+  await (await token.approve(vaultAddress, SEED_AMOUNT)).wait();
+  await (await vault.deposit(SEED_AMOUNT)).wait();
+  console.log("🏦 Vault seeded with 5000 VLT initial liquidity");
+  console.log();
+ 
+  // ─── BUILD CONFIG OBJECT ─────────────────────────────────────────────────────
+  const network = await ethers.provider.getNetwork();
+ 
+  const config = {
+    network: network.name === "unknown" ? "localhost" : network.name,
+    chainId: Number(network.chainId),
     deployedAt: new Date().toISOString(),
-    deployer: deployer.address,
     contracts: {
-      VultraToken:     tokenAddress,
-      LiquidityVault:  vaultAddress,
+      vault:  vaultAddress,
+      token:  tokenAddress,
     },
-    config: {
-      freezeDuration:  FREEZE_DURATION,
-      maxWithdrawBps:  MAX_WITHDRAW_BPS,
-      guardianAddress: GUARDIAN_ADDRESS,
+    guardian: {
+      address:       guardian.address,
+      requiredVotes,
+      totalGuardians: guardians.length,
+    },
+    admin: {
+      address: deployer.address,
+      role: "Can emergencyUnfreeze() and setMaxWithdrawBps(). Never has freeze power.",
+    },
+    accounts: {
+      deployer: deployer.address,
+      guardian: guardian.address,
+      user1:    user1.address,
+      user2:    user2.address,
+      user3:    user3.address,
+      attacker: attacker.address,
     },
   };
-
-  const outPath = path.join(__dirname, "../deployments.json");
-  fs.writeFileSync(outPath, JSON.stringify(deployment, null, 2));
-  console.log(`\n📄 Deployment saved to: ${outPath}`);
-
-  // ── 4. Update Frontend .env.local ──────────────────────────────────────
-  const frontendEnvPath = path.join(
-    __dirname,
-    "../../vultra-node/.env.local"
-  );
-  
-  let currentEnv = "";
-  if (fs.existsSync(frontendEnvPath)) {
-    currentEnv = fs.readFileSync(frontendEnvPath, "utf8");
-  }
-
-  const newVars: Record<string, string> = {
-    NEXT_PUBLIC_VLT_TOKEN_ADDRESS: tokenAddress,
-    NEXT_PUBLIC_VAULT_ADDRESS: vaultAddress,
-    NEXT_PUBLIC_CHAIN_ID: deployment.chainId.toString(),
-  };
-
-  let updatedEnv = currentEnv;
-  for (const [key, value] of Object.entries(newVars)) {
-    const regex = new RegExp(`^${key}=.*`, "m");
-    if (regex.test(updatedEnv)) {
-      updatedEnv = updatedEnv.replace(regex, `${key}=${value}`);
-    } else {
-      updatedEnv += `\n${key}=${value}`;
+ 
+  // ─── EXPORT TO ALL MODULES ───────────────────────────────────────────────────
+  const scriptDir = __dirname;
+  const projectRoot = path.resolve(scriptDir, "../..");
+ 
+  const exportTargets = [
+    {
+      label: "Frontend (Next.js)",
+      filePath: path.join(projectRoot, "vultra-node", "config", "contracts.json"),
+    },
+    {
+      label: "Monitoring Engine",
+      filePath: path.join(projectRoot, "monitoring-engine", "config", "contracts.json"),
+    },
+    {
+      label: "Attack Simulator",
+      filePath: path.join(projectRoot, "attack-simulator", "config", "contracts.json"),
+    },
+    {
+      label: "Contracts (local cache)",
+      filePath: path.join(scriptDir, "../deployments.json"),
+    },
+  ];
+ 
+  for (const target of exportTargets) {
+    const dir = path.dirname(target.filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
     }
+    fs.writeFileSync(target.filePath, JSON.stringify(config, null, 2));
+    console.log(`📁 Config → ${target.label}`);
+    console.log(`   ${target.filePath}`);
+  }
+ 
+  // ─── ALSO AUTO-UPDATE FRONTEND .env.local ────────────────────────────────────
+  const envLocalPath = path.join(projectRoot, "vultra-node", ".env.local");
+  
+  let existingEnv = "";
+  if (fs.existsSync(envLocalPath)) {
+      existingEnv = fs.readFileSync(envLocalPath, "utf8");
   }
 
-  fs.writeFileSync(frontendEnvPath, updatedEnv.trim() + "\n");
-  console.log(`   ✅ Frontend .env.local updated: ${frontendEnvPath}`);
-
-  console.log("\n🎉 All contracts deployed successfully!\n");
+  // Parse existing vars and remove the ones we are about to overwrite
+  const lines = existingEnv.split("\n");
+  const preservedLines = lines.filter(line => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("# Auto-generated")) return false;
+      if (trimmed.startsWith("NEXT_PUBLIC_VAULT_ADDRESS=")) return false;
+      if (trimmed.startsWith("NEXT_PUBLIC_TOKEN_ADDRESS=")) return false;
+      if (trimmed.startsWith("NEXT_PUBLIC_CHAIN_ID=")) return false;
+      if (trimmed.startsWith("NEXT_PUBLIC_ALCHEMY_HTTP=")) return false;
+      return true;
+  });
+  
+  const envContent = [
+    ...preservedLines,
+    `NEXT_PUBLIC_VAULT_ADDRESS=${vaultAddress}`,
+    `NEXT_PUBLIC_TOKEN_ADDRESS=${tokenAddress}`,
+    `NEXT_PUBLIC_CHAIN_ID=${Number(network.chainId)}`,
+    `NEXT_PUBLIC_ALCHEMY_HTTP=http://127.0.0.1:8545`,
+    `# Auto-generated by deploy.ts at ${new Date().toISOString()}`,
+  ].join("\n");
+ 
+  fs.writeFileSync(envLocalPath, envContent);
+  console.log(`\n⚙️  Frontend .env.local auto-updated (preserved existing custom vars)`);
+ 
+  // ─── SUMMARY ─────────────────────────────────────────────────────────────────
+  console.log("\n" + "─".repeat(56));
+  console.log("🎉 DEPLOYMENT COMPLETE");
+  console.log("─".repeat(56));
+  console.log(`Network:   ${config.network} (chainId: ${config.chainId})`);
+  console.log(`Vault:     ${vaultAddress}`);
+  console.log(`Token:     ${tokenAddress}`);
+  console.log(`Admin:     ${deployer.address}`);
+  console.log(`Guardian:  ${guardian.address}`);
+  console.log(`Attacker:  ${attacker.address}`);
+  console.log("─".repeat(56));
+  console.log("Next steps:");
+  console.log("  1. cd monitoring-engine && npm run dev");
+  console.log("  2. cd vultra-node       && npm run dev");
+  console.log("  3. Run attack: npx hardhat run scripts/attack.ts --network localhost");
+  console.log("─".repeat(56));
 }
-
-main().catch((error) => {
-  console.error("❌ Deployment failed:", error);
-  process.exitCode = 1;
+ 
+main().catch((err) => {
+  console.error("❌ Deployment failed:", err);
+  process.exit(1);
 });

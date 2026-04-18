@@ -1,0 +1,43 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "D:\\VULTRA NODE\\attack-contracts\\contracts\\ReentrancyAttacker.sol": {
+      "lastModificationDate": 1776451159144,
+      "contentHash": "a918b9f125c8c0287ec82d4c61615852",
+      "sourceName": "contracts/ReentrancyAttacker.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "IERC20",
+        "IVault",
+        "ReentrancyAttacker"
+      ]
+    }
+  }
+}

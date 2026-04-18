@@ -33,11 +33,12 @@ export interface LiquidityVaultInterface extends Interface {
       | "emergencyUnfreeze"
       | "freeze"
       | "freezeDuration"
+      | "frozen"
       | "frozenAt"
       | "getRoleAdmin"
       | "grantRole"
       | "hasRole"
-      | "isFrozen"
+      | "lastWithdrawTime"
       | "maxWithdrawAmount"
       | "maxWithdrawBps"
       | "renounceRole"
@@ -50,6 +51,7 @@ export interface LiquidityVaultInterface extends Interface {
       | "totalDeposits"
       | "unfreeze"
       | "withdraw"
+      | "withdrawCount60s"
   ): FunctionFragment;
 
   getEvent(
@@ -62,6 +64,7 @@ export interface LiquidityVaultInterface extends Interface {
       | "RoleAdminChanged"
       | "RoleGranted"
       | "RoleRevoked"
+      | "SuspiciousActivity"
       | "Unfreeze"
       | "Withdraw"
   ): EventFragment;
@@ -91,6 +94,7 @@ export interface LiquidityVaultInterface extends Interface {
     functionFragment: "freezeDuration",
     values?: undefined
   ): string;
+  encodeFunctionData(functionFragment: "frozen", values?: undefined): string;
   encodeFunctionData(functionFragment: "frozenAt", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "getRoleAdmin",
@@ -104,7 +108,10 @@ export interface LiquidityVaultInterface extends Interface {
     functionFragment: "hasRole",
     values: [BytesLike, AddressLike]
   ): string;
-  encodeFunctionData(functionFragment: "isFrozen", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "lastWithdrawTime",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "maxWithdrawAmount",
     values?: undefined
@@ -147,6 +154,10 @@ export interface LiquidityVaultInterface extends Interface {
     functionFragment: "withdraw",
     values: [BigNumberish]
   ): string;
+  encodeFunctionData(
+    functionFragment: "withdrawCount60s",
+    values: [AddressLike]
+  ): string;
 
   decodeFunctionResult(
     functionFragment: "DEFAULT_ADMIN_ROLE",
@@ -167,6 +178,7 @@ export interface LiquidityVaultInterface extends Interface {
     functionFragment: "freezeDuration",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "frozen", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "frozenAt", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getRoleAdmin",
@@ -174,7 +186,10 @@ export interface LiquidityVaultInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "grantRole", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "isFrozen", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "lastWithdrawTime",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "maxWithdrawAmount",
     data: BytesLike
@@ -211,6 +226,10 @@ export interface LiquidityVaultInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "unfreeze", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "withdrawCount60s",
+    data: BytesLike
+  ): Result;
 }
 
 export namespace DepositEvent {
@@ -349,6 +368,28 @@ export namespace RoleRevokedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
+export namespace SuspiciousActivityEvent {
+  export type InputTuple = [
+    user: AddressLike,
+    withdrawCount: BigNumberish,
+    amount: BigNumberish
+  ];
+  export type OutputTuple = [
+    user: string,
+    withdrawCount: bigint,
+    amount: bigint
+  ];
+  export interface OutputObject {
+    user: string;
+    withdrawCount: bigint;
+    amount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
 export namespace UnfreezeEvent {
   export type InputTuple = [triggeredBy: AddressLike, at: BigNumberish];
   export type OutputTuple = [triggeredBy: string, at: bigint];
@@ -437,6 +478,8 @@ export interface LiquidityVault extends BaseContract {
 
   freezeDuration: TypedContractMethod<[], [bigint], "view">;
 
+  frozen: TypedContractMethod<[], [boolean], "view">;
+
   frozenAt: TypedContractMethod<[], [bigint], "view">;
 
   getRoleAdmin: TypedContractMethod<[role: BytesLike], [string], "view">;
@@ -453,7 +496,7 @@ export interface LiquidityVault extends BaseContract {
     "view"
   >;
 
-  isFrozen: TypedContractMethod<[], [boolean], "view">;
+  lastWithdrawTime: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
 
   maxWithdrawAmount: TypedContractMethod<[], [bigint], "view">;
 
@@ -499,6 +542,8 @@ export interface LiquidityVault extends BaseContract {
 
   withdraw: TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
 
+  withdrawCount60s: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
@@ -525,6 +570,9 @@ export interface LiquidityVault extends BaseContract {
     nameOrSignature: "freezeDuration"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
+    nameOrSignature: "frozen"
+  ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
     nameOrSignature: "frozenAt"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
@@ -545,8 +593,8 @@ export interface LiquidityVault extends BaseContract {
     "view"
   >;
   getFunction(
-    nameOrSignature: "isFrozen"
-  ): TypedContractMethod<[], [boolean], "view">;
+    nameOrSignature: "lastWithdrawTime"
+  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
   getFunction(
     nameOrSignature: "maxWithdrawAmount"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -591,6 +639,9 @@ export interface LiquidityVault extends BaseContract {
   getFunction(
     nameOrSignature: "withdraw"
   ): TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "withdrawCount60s"
+  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
 
   getEvent(
     key: "Deposit"
@@ -647,6 +698,13 @@ export interface LiquidityVault extends BaseContract {
     RoleRevokedEvent.InputTuple,
     RoleRevokedEvent.OutputTuple,
     RoleRevokedEvent.OutputObject
+  >;
+  getEvent(
+    key: "SuspiciousActivity"
+  ): TypedContractEvent<
+    SuspiciousActivityEvent.InputTuple,
+    SuspiciousActivityEvent.OutputTuple,
+    SuspiciousActivityEvent.OutputObject
   >;
   getEvent(
     key: "Unfreeze"
@@ -750,6 +808,17 @@ export interface LiquidityVault extends BaseContract {
       RoleRevokedEvent.InputTuple,
       RoleRevokedEvent.OutputTuple,
       RoleRevokedEvent.OutputObject
+    >;
+
+    "SuspiciousActivity(address,uint256,uint256)": TypedContractEvent<
+      SuspiciousActivityEvent.InputTuple,
+      SuspiciousActivityEvent.OutputTuple,
+      SuspiciousActivityEvent.OutputObject
+    >;
+    SuspiciousActivity: TypedContractEvent<
+      SuspiciousActivityEvent.InputTuple,
+      SuspiciousActivityEvent.OutputTuple,
+      SuspiciousActivityEvent.OutputObject
     >;
 
     "Unfreeze(address,uint256)": TypedContractEvent<

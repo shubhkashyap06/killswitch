@@ -9,7 +9,7 @@ import VaultABI from "@/lib/abis/LiquidityVault.json";
 import TokenABI from "@/lib/abis/VultraToken.json";
 
 const VAULT_ADDRESS = process.env.NEXT_PUBLIC_VAULT_ADDRESS as string;
-const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VLT_TOKEN_ADDRESS as string;
+const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS as string;
 const RPC_URL = "http://127.0.0.1:8545";
 
 // Hardhat Account #1 (Attacker)

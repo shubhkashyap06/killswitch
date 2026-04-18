@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAccount } from "wagmi";
 import { useVultraStore } from "@/lib/store";
 import Navbar from "@/components/Navbar";
 import LiquidityCards from "@/components/LiquidityCards";
@@ -14,14 +15,19 @@ import AlertPanel from "@/components/AlertPanel";
 import VestingSection from "@/components/VestingSection";
 
 export default function DashboardPage() {
-  const { isConnected } = useVultraStore();
+  // Use wagmi as the source of truth — the Zustand store hydrates late
+  const { address, isConnected } = useAccount();
   const router = useRouter();
+  // Prevents redirect firing during SSR / first-render hydration when
+  // isConnected is always false before the client wallet state arrives.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    if (!isConnected) router.push("/");
-  }, [isConnected, router]);
+    if (mounted && !isConnected) router.push("/");
+  }, [mounted, isConnected, router]);
 
-  if (!isConnected) return null;
+  if (!mounted || !isConnected) return null;
 
   return (
     <div

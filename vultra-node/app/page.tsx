@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
@@ -25,10 +25,12 @@ export default function LandingPage() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    if (isConnected) router.push("/dashboard");
-  }, [isConnected, router]);
+    if (mounted && isConnected) router.push("/dashboard");
+  }, [mounted, isConnected, router]);
 
   function handleConnect() {
     try {

@@ -4,6 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev:dashboard": "cd frontend && npm run dev",
+    "dev:engine": "cd monitoring-engine && npm run dev",
+    "node": "cd contracts && npx hardhat node",
+    "deploy": "cd contracts && npx hardhat run scripts/deploy.ts --network localhost",
+    "attack": "cd attack-contracts && npm run attack",
+    "attack:rugpull": "cd attack-contracts && npm run attack:rugpull",
+    "attack:microdrain": "cd attack-contracts && npm run attack:microdrain",
+    "attack:sybil": "cd attack-contracts && npm run attack:sybil",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

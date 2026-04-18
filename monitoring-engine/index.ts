@@ -61,7 +61,7 @@ class WalletState {
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 async function main() {
-  console.log("🛡️  Starting Advanced Vultra-Node Threat Engine...\n");
+  console.log("🛡️  Starting Advanced Killswitch-Node Threat Engine...\n");
   console.log(
     `⚙️  Loaded Config: Threshold > ${config.engine.freezeThreshold} | Decay -${config.engine.decayRatePerMinute}/min\n`
   );

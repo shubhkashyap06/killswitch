@@ -1,6 +1,6 @@
 /**
- * @module @vultra/sdk
- * @description Official Node.js/TypeScript SDK for interacting with Vultra-Node liquidity protection.
+ * @module @killswitch/sdk
+ * @description Official Node.js/TypeScript SDK for interacting with Killswitch-Node liquidity protection.
  */
 
 import { ethers } from "ethers";
@@ -12,7 +12,7 @@ export interface ProtectionOptions {
   threatThreshold?: number; // Default 70
 }
 
-export class VultraProtect {
+export class KillswitchProtect {
   private vaultAddress: string;
   private provider: ethers.JsonRpcProvider;
   private guardian: ethers.Wallet;
@@ -29,7 +29,7 @@ export class VultraProtect {
    * Instantiates the monitoring engine and begins listening to the provided vault.
    */
   public async enableProtection(): Promise<void> {
-    console.log(`[Vultra SDK] Starting protection for vault: ${this.vaultAddress}`);
+    console.log(`[Killswitch SDK] Starting protection for vault: ${this.vaultAddress}`);
     // Bootstraps WebSocket listeners and attaches to the Threat Engine...
     // (Implementation matches the monitoring-engine/index.ts architecture)
   }
@@ -38,7 +38,7 @@ export class VultraProtect {
    * Disables the active protection engine.
    */
   public async disableProtection(): Promise<void> {
-    console.log(`[Vultra SDK] Stopping protection for vault: ${this.vaultAddress}`);
+    console.log(`[Killswitch SDK] Stopping protection for vault: ${this.vaultAddress}`);
     this.provider.removeAllListeners();
   }
 
@@ -46,7 +46,7 @@ export class VultraProtect {
    * Manually trigger a vault freeze if threat threshold is bypassed externally.
    */
   public async emergencyFreeze(reason: string): Promise<string> {
-    console.log(`[Vultra SDK] EMERGENCY FREEZE ACTIVATED: ${reason}`);
+    console.log(`[Killswitch SDK] EMERGENCY FREEZE ACTIVATED: ${reason}`);
     const abi = ["function freeze(string calldata reason) external"];
     const contract = new ethers.Contract(this.vaultAddress, abi, this.guardian);
     

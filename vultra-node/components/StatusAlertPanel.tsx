@@ -1,11 +1,11 @@
 "use client";
 
-import { useVultraStore } from "@/lib/store";
+import { useKillswitchStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, ShieldOff, AlertTriangle } from "lucide-react";
 
 export default function StatusAlertPanel() {
-  const { systemStatus, isFrozen, threatScore, alertMessage, alerts } = useVultraStore();
+  const { systemStatus, isFrozen, threatScore, alertMessage, alerts } = useKillswitchStore();
   const critical = alerts.filter(a => a.level === "CRITICAL").length;
   const warnings  = alerts.filter(a => a.level === "WARNING").length;
 

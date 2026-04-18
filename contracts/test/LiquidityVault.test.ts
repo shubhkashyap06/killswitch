@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { LiquidityVault, VultraToken } from "../typechain-types";
+import { LiquidityVault, KillswitchToken } from "../typechain-types";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 
@@ -8,19 +8,19 @@ const ONE_VLT  = ethers.parseEther("1");
 const TEN_VLT  = ethers.parseEther("10");
 const HOUR     = 3600;
 
-describe("VultraToken", () => {
-  let token: VultraToken;
+describe("KillswitchToken", () => {
+  let token: KillswitchToken;
   let owner: HardhatEthersSigner;
   let user: HardhatEthersSigner;
 
   beforeEach(async () => {
     [owner, user] = await ethers.getSigners();
-    const VultraToken = await ethers.getContractFactory("VultraToken");
-    token = await VultraToken.deploy(owner.address);
+    const KillswitchToken = await ethers.getContractFactory("KillswitchToken");
+    token = await KillswitchToken.deploy(owner.address);
   });
 
   it("has correct name, symbol, decimals", async () => {
-    expect(await token.name()).to.equal("Vultra Token");
+    expect(await token.name()).to.equal("Killswitch Token");
     expect(await token.symbol()).to.equal("VLT");
     expect(await token.decimals()).to.equal(18);
   });
@@ -43,7 +43,7 @@ describe("VultraToken", () => {
 });
 
 describe("LiquidityVault", () => {
-  let token:    VultraToken;
+  let token:    KillswitchToken;
   let vault:    LiquidityVault;
   let owner:    HardhatEthersSigner;
   let guardian: HardhatEthersSigner;
@@ -57,8 +57,8 @@ describe("LiquidityVault", () => {
     [owner, guardian, alice, bob] = await ethers.getSigners();
 
     // Deploy token
-    const VultraToken = await ethers.getContractFactory("VultraToken");
-    token = await VultraToken.deploy(owner.address);
+    const KillswitchToken = await ethers.getContractFactory("KillswitchToken");
+    token = await KillswitchToken.deploy(owner.address);
 
     // Deploy vault
     const LiquidityVault = await ethers.getContractFactory("LiquidityVault");

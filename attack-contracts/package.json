@@ -1,7 +1,7 @@
 {
-  "name": "vultra-attack-contracts",
+  "name": "killswitch-attack-contracts",
   "version": "1.0.0",
-  "description": "Real on-chain attack simulator for Vultra-Node hackathon demo",
+  "description": "Real on-chain attack simulator for Killswitch-Node hackathon demo",
   "scripts": {
     "compile": "npx hardhat compile",
     "attack": "npx hardhat run scripts/execute-attack.ts --network localhost",

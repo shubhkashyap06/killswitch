@@ -53,7 +53,7 @@ export interface TxActivityPoint {
 
 // ─── Store Interface ───────────────────────────────────────────────────────────
 
-export interface VultraStore {
+export interface KillswitchStore {
   /* Wallet */
   walletAddress: string | null;
   isConnected: boolean;
@@ -196,7 +196,7 @@ const attackMeta: Record<
 
 let gradualResetTimer: ReturnType<typeof setInterval> | null = null;
 
-export const useVultraStore = create<VultraStore>((set, get) => ({
+export const useKillswitchStore = create<KillswitchStore>((set, get) => ({
   /* ── Wallet ── */
   walletAddress: null,
   isConnected: false,
@@ -204,9 +204,9 @@ export const useVultraStore = create<VultraStore>((set, get) => ({
   disconnectWallet: () => set({ walletAddress: null, isConnected: false }),
 
   /* ── Profile ── */
-  userEmail: typeof window !== "undefined" ? localStorage.getItem("vultra_user_email") : null,
+  userEmail: typeof window !== "undefined" ? localStorage.getItem("killswitch_user_email") : null,
   setUserEmail: (email: string) => {
-    if (typeof window !== "undefined") localStorage.setItem("vultra_user_email", email);
+    if (typeof window !== "undefined") localStorage.setItem("killswitch_user_email", email);
     set({ userEmail: email });
   },
 
@@ -380,7 +380,7 @@ export const useVultraStore = create<VultraStore>((set, get) => ({
     });
 
     if (typeof window !== "undefined") {
-      const chan = new BroadcastChannel("vultra_ui_telemetry");
+      const chan = new BroadcastChannel("killswitch_ui_telemetry");
       chan.postMessage({ type: "THREAT_UPDATE", threatScore: next, attackLogs: get().attackLogs });
       chan.close();
     }
@@ -620,7 +620,7 @@ export const useVultraStore = create<VultraStore>((set, get) => ({
       const newState = { attackLogs: [log, ...state.attackLogs].slice(0, 50) };
       // Safely broadcast ONLY the attack logs and threat score
       if (typeof window !== "undefined") {
-        const chan = new BroadcastChannel("vultra_ui_telemetry");
+        const chan = new BroadcastChannel("killswitch_ui_telemetry");
         chan.postMessage({ type: "THREAT_UPDATE", threatScore: get().threatScore, attackLogs: newState.attackLogs });
         chan.close();
       }
@@ -631,28 +631,28 @@ export const useVultraStore = create<VultraStore>((set, get) => ({
 
 // Safe UI Telemetry Receiver
 if (typeof window !== "undefined") {
-  const telemetryChannel = new BroadcastChannel("vultra_ui_telemetry");
+  const telemetryChannel = new BroadcastChannel("killswitch_ui_telemetry");
   telemetryChannel.onmessage = (e) => {
     if (e.data?.type === "THREAT_UPDATE") {
       if (gradualResetTimer) {
         clearInterval(gradualResetTimer);
         gradualResetTimer = null;
       }
-      useVultraStore.setState({ 
+      useKillswitchStore.setState({ 
         threatScore: e.data.threatScore, 
         attackLogs: e.data.attackLogs 
       });
     }
     // Instant freeze sync from attacker portal after successful vault.freeze() TX
     if (e.data?.type === "FORCE_FREEZE") {
-      useVultraStore.setState({ 
+      useKillswitchStore.setState({ 
         isFrozen: true, 
         systemStatus: "FROZEN",
         alertMessage: "⚠ Circuit breaker triggered — vault frozen by Guardian"
       });
     }
     if (e.data?.type === "FORCE_UNFREEZE") {
-      useVultraStore.setState({ 
+      useKillswitchStore.setState({ 
         isFrozen: false, 
         systemStatus: "NORMAL",
         threatScore: 0,

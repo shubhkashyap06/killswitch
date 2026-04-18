@@ -23,7 +23,7 @@ describe("Salami Slicing Defense & Master Controller Override", function () {
         [admin, guardianA, user1, user2, user3, user4, user5, masterSigner1, masterSigner2, masterSigner3] = await ethers.getSigners();
 
         const Token = await ethers.getContractFactory("MockERC20");
-        token = await Token.deploy("Vultra Token", "VLT");
+        token = await Token.deploy("Killswitch Token", "VLT");
 
         const CB = await ethers.getContractFactory("TieredCircuitBreaker");
         circuitBreaker = await upgrades.deployProxy(CB, [admin.address, 1000, ethers.parseEther("5000")], { kind: "uups" });

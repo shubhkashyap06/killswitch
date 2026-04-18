@@ -1,12 +1,12 @@
 "use client";
 
-import { useVultraStore } from "@/lib/store";
+import { useKillswitchStore } from "@/lib/store";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { BarChart2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function TxActivityBarChart() {
-  const { txActivity } = useVultraStore();
+  const { txActivity } = useKillswitchStore();
 
   const data = txActivity.map(p => ({
     time: p.time,

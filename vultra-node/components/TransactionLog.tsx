@@ -1,6 +1,6 @@
 "use client";
 
-import { useVultraStore } from "@/lib/store";
+import { useKillswitchStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowDownLeft, ArrowUpRight, Ban, RefreshCw, Activity } from "lucide-react";
 
@@ -28,7 +28,7 @@ function fmtTime(d: Date) {
 }
 
 export default function TransactionLog() {
-  const { transactions } = useVultraStore();
+  const { transactions } = useKillswitchStore();
 
   return (
     <div className="glass-card" style={{ overflow: "hidden" }}>

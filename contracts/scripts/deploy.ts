@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 
 async function main() {
-  console.log("🚀 Deploying Vultra-Node contracts...\n");
+  console.log("🚀 Deploying Killswitch-Node contracts...\n");
  
   // ─── SIGNERS ────────────────────────────────────────────────────────────────
   const [
@@ -22,11 +22,11 @@ async function main() {
   console.log();
  
   // ─── DEPLOY TOKEN ────────────────────────────────────────────────────────────
-  const VultraToken = await ethers.getContractFactory("VultraToken");
-  const token = await VultraToken.deploy(deployer.address);
+  const KillswitchToken = await ethers.getContractFactory("KillswitchToken");
+  const token = await KillswitchToken.deploy(deployer.address);
   await token.waitForDeployment();
   const tokenAddress = await token.getAddress();
-  console.log("✅ VultraToken deployed:", tokenAddress);
+  console.log("✅ KillswitchToken deployed:", tokenAddress);
  
   // ─── DEPLOY VAULT ────────────────────────────────────────────────────────────
   const guardians = [guardian.address];
@@ -112,7 +112,7 @@ async function main() {
   const exportTargets = [
     {
       label: "Frontend (Next.js)",
-      filePath: path.join(projectRoot, "vultra-node", "config", "contracts.json"),
+      filePath: path.join(projectRoot, "killswitch", "config", "contracts.json"),
     },
     {
       label: "Monitoring Engine",
@@ -139,7 +139,7 @@ async function main() {
   }
  
   // ─── ALSO AUTO-UPDATE FRONTEND .env.local ────────────────────────────────────
-  const envLocalPath = path.join(projectRoot, "vultra-node", ".env.local");
+  const envLocalPath = path.join(projectRoot, "killswitch", ".env.local");
   
   let existingEnv = "";
   if (fs.existsSync(envLocalPath)) {
@@ -183,7 +183,7 @@ async function main() {
   console.log("─".repeat(56));
   console.log("Next steps:");
   console.log("  1. cd monitoring-engine && npm run dev");
-  console.log("  2. cd vultra-node       && npm run dev");
+  console.log("  2. cd killswitch       && npm run dev");
   console.log("  3. Run attack: npx hardhat run scripts/attack.ts --network localhost");
   console.log("─".repeat(56));
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useVultraStore } from "@/lib/store";
+import { useKillswitchStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertOctagon, Shield, Crosshair, Radio, Wifi,
@@ -10,7 +10,7 @@ import AttackLog from "@/components/AttackLog";
 import ThreatMeter from "@/components/ThreatMeter";
 
 export default function AttackerPage() {
-  const { systemStatus, isFrozen, threatScore, attackLogs, transactions } = useVultraStore();
+  const { systemStatus, isFrozen, threatScore, attackLogs, transactions } = useKillswitchStore();
 
   const attackCount = attackLogs.length;
   const frozenCount = transactions.filter(t => t.status === "ATTACK").length;
@@ -77,7 +77,7 @@ export default function AttackerPage() {
                 Attacker Simulation Portal
               </h1>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: 2 }}>
-                Target: Vultra-Node Liquidity Pool · Shared real-time state
+                Target: Killswitch-Node Liquidity Pool · Shared real-time state
               </div>
             </div>
 
@@ -166,7 +166,7 @@ export default function AttackerPage() {
               </div>
               <ThreatMeter />
               <div style={{ marginTop: 12, fontSize: "0.72rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
-                Threshold: auto-freeze at 20 · Current target: Vultra-Node Pool
+                Threshold: auto-freeze at 20 · Current target: Killswitch-Node Pool
               </div>
             </div>
 

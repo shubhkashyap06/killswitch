@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useVultraStore } from "@/lib/store";
+import { useKillswitchStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowDownCircle, ArrowUpCircle, ShieldCheck, Settings2, Zap, Clock, Mail, Lock, Check
@@ -9,7 +9,7 @@ import {
 import { useWriteContract, useSwitchChain, useAccount, useReadContracts } from "wagmi";
 import { parseEther } from "viem";
 import VaultABI from "@/lib/abis/LiquidityVault.json";
-import TokenABI from "@/lib/abis/VultraToken.json";
+import TokenABI from "@/lib/abis/KillswitchToken.json";
 import { supabase } from "@/lib/supabase";
 
 const VAULT_ADDRESS = process.env.NEXT_PUBLIC_VAULT_ADDRESS as `0x${string}`;
@@ -17,7 +17,7 @@ const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS as `0x${string}`;
 const ENGINE_URL = "http://localhost:3001";
 
 export default function ActionPanel() {
-  const { isFrozen, userBalance, totalLiquidity, threatScore, userEmail } = useVultraStore();
+  const { isFrozen, userBalance, totalLiquidity, threatScore, userEmail } = useKillswitchStore();
   const [depositAmount, setDepositAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [feedback, setFeedback] = useState<{ msg: string; type: "success" | "error" | "warn" } | null>(null);
@@ -245,7 +245,7 @@ export default function ActionPanel() {
       showFeedback("✅ Vault unfrozen successfully!", "success");
       
       if (typeof window !== "undefined") {
-        const chan = new BroadcastChannel("vultra_ui_telemetry");
+        const chan = new BroadcastChannel("killswitch_ui_telemetry");
         chan.postMessage({ type: "FORCE_UNFREEZE" });
         chan.close();
       }

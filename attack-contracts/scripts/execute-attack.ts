@@ -83,7 +83,7 @@ async function main() {
     }
   }
 
-  await typeScript("INITIALIZING VULTRA-NODE BYPASS PROTOCOL...");
+  await typeScript("INITIALIZING killswitch BYPASS PROTOCOL...");
   await typeScript("BYPASSING FIREWALLS... [OK]");
   await typeScript("LOCATING TARGET CONTRACT... [OK]");
   console.log();
@@ -97,7 +97,7 @@ async function main() {
 
   const deployment = JSON.parse(fs.readFileSync(deploymentPath, "utf8"));
   const vaultAddress = deployment.contracts.vault || deployment.contracts.LiquidityVault;
-  const tokenAddress = deployment.contracts.token || deployment.contracts.VultraToken;
+  const tokenAddress = deployment.contracts.token || deployment.contracts.KillswitchToken;
 
   if (!vaultAddress || !tokenAddress) {
     console.error(terminalAlert(" FATAL ERROR: Vault/Token address missing in deployments.json "));
@@ -281,9 +281,9 @@ async function main() {
       try { isFrozenNow = await vault.frozen(); } catch {}
 
       if (isFrozenNow) {
-        finalReason = "VULTRA-NODE GUARDIAN PROTOCOL";
+        finalReason = "killswitch GUARDIAN PROTOCOL";
         console.log(terminalAlert(`\n  [SYS-ERR] TARGET NODE SEVERED CONNECTION `));
-        await typeScript(`  > EXCEPTION: VULTRA-NODE GUARDIAN PROTOCOL INTERCEPTED TRAFFIC`);
+        await typeScript(`  > EXCEPTION: killswitch GUARDIAN PROTOCOL INTERCEPTED TRAFFIC`);
         await typeScript(`  > SMART CONTRACT ENGAGED EMERGENCY FREEZE. FUNDS LOCKED.`);
       } else {
         const msg = e.message || "";
@@ -342,10 +342,10 @@ async function main() {
   }
 
   if (vaultFrozen) {
-    await typeScript("\n[ANALYSIS] ASSAULT THWARTED BY VULTRA-NODE THREAT ENGINE.");
+    await typeScript("\n[ANALYSIS] ASSAULT THWARTED BY killswitch THREAT ENGINE.");
     await typeScript("[ANALYSIS] REMAINING TARGET LIQUIDITY IS SAFE. MISSION FAILED.\n");
   } else {
-    await typeScript("\n[ANALYSIS] EXTRACTION COMPLETE. VULTRA-NODE DID NOT RESPOND IN TIME.\n");
+    await typeScript("\n[ANALYSIS] EXTRACTION COMPLETE. killswitch DID NOT RESPOND IN TIME.\n");
   }
 }
 

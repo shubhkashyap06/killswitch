@@ -45,7 +45,7 @@ export class GuardianNode {
         
         // EIP-712 Domain matching AIOracleConsensus
         this.defaultDomain = {
-            name: "VaultSentinel",
+            name: "Killswitch",
             version: "1",
             chainId: chainId,
             verifyingContract: consensusAddress

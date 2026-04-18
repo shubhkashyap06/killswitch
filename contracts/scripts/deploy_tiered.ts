@@ -1,13 +1,13 @@
 import { ethers, upgrades } from "hardhat";
 
 async function main() {
-    console.log("=== Deploying Vault Sentinel Tiered Architecture ===");
+    console.log("=== Deploying Killswitch Tiered Architecture ===");
 
     const [deployer] = await ethers.getSigners();
     console.log("Deployer:", deployer.address);
 
     // 1. Deploy Token (or attach to existing)
-    const Token = await ethers.getContractFactory("VultraToken");
+    const Token = await ethers.getContractFactory("KillswitchToken");
     const token = await Token.deploy();
     await token.waitForDeployment();
     console.log("Tokens deployed to:", token.target);

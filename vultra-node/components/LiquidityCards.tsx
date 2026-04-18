@@ -1,6 +1,6 @@
 "use client";
 
-import { useVultraStore } from "@/lib/store";
+import { useKillswitchStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Droplets, Lock, DollarSign, Wallet, Activity } from "lucide-react";
 
@@ -14,7 +14,7 @@ function pct(part: number, total: number) {
 }
 
 export default function LiquidityCards() {
-  const { totalLiquidity, availableLiquidity, frozenLiquidity, userBalance, systemStatus, threatScore } = useVultraStore();
+  const { totalLiquidity, availableLiquidity, frozenLiquidity, userBalance, systemStatus, threatScore } = useKillswitchStore();
   const isFrozen = systemStatus === "FROZEN";
   const healthScore = Math.max(0, 100 - threatScore);
 

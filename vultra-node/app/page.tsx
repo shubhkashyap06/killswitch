@@ -55,9 +55,9 @@ export default function LandingPage() {
       }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <img src="/logo.png" alt="Vultra" style={{ width: 34, height: 34, objectFit: "contain" }} />
+            <img src="/logo.png" alt="Killswitch" style={{ width: 34, height: 34, objectFit: "contain" }} />
             <span style={{ fontWeight: 800, fontSize: "1.05rem", color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
-              Vultra<span style={{ color: "var(--accent)" }}>Node</span>
+              Killswitch<span style={{ color: "var(--accent)" }}>Node</span>
             </span>
           </div>
           <nav style={{ display: "flex", alignItems: "center", gap: 28 }}>
@@ -217,7 +217,7 @@ export default function LandingPage() {
       {/* ── Footer ── */}
       <footer style={{ borderTop: "1px solid var(--border)", background: "var(--bg-secondary)", padding: "20px 24px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-          <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text-secondary)" }}>© 2026 Vultra-Node Protocol</span>
+          <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text-secondary)" }}>© 2026 Killswitch-Node Protocol</span>
           <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Built on Hardhat · Ethers.js v6 · Next.js 16</span>
         </div>
       </footer>

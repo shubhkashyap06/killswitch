@@ -1,7 +1,7 @@
 {
-  "name": "vultra-monitoring-engine",
+  "name": "killswitch-monitoring-engine",
   "version": "1.0.0",
-  "description": "Backend monitoring engine for Vultra-Node",
+  "description": "Backend monitoring engine for Killswitch-Node",
   "main": "index.ts",
   "scripts": {
     "start": "ts-node index.ts",

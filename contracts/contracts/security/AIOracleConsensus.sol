@@ -35,7 +35,7 @@ contract AIOracleConsensus is AccessControl, EIP712 {
     error NotGuardianNode();
 
     constructor(address _circuitBreaker) 
-        EIP712("VaultSentinel", "1") 
+        EIP712("Killswitch", "1") 
     {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         circuitBreaker = TieredCircuitBreaker(_circuitBreaker);

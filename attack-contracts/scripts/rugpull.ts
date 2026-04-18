@@ -39,7 +39,7 @@ async function main() {
 
   const deployment = JSON.parse(fs.readFileSync(deploymentPath, "utf8"));
   const vaultAddress = deployment.contracts.vault || deployment.contracts.LiquidityVault;
-  const tokenAddress = deployment.contracts.token || deployment.contracts.VultraToken;
+  const tokenAddress = deployment.contracts.token || deployment.contracts.KillswitchToken;
 
   const signers = await ethers.getSigners();
   const deployer = signers[0];

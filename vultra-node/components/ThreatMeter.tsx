@@ -1,6 +1,6 @@
 "use client";
 
-import { useVultraStore } from "@/lib/store";
+import { useKillswitchStore } from "@/lib/store";
 import { motion } from "framer-motion";
 
 function getThreatColor(score: number) {
@@ -16,7 +16,7 @@ function getThreatLabel(score: number) {
 }
 
 export default function ThreatMeter({ compact = false }: { compact?: boolean }) {
-  const { threatScore } = useVultraStore();
+  const { threatScore } = useKillswitchStore();
   const c = getThreatColor(threatScore);
   const label = getThreatLabel(threatScore);
   const isPulsing = threatScore >= 20;

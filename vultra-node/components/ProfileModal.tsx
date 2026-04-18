@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Mail, CheckCircle, X, AlertTriangle } from "lucide-react";
-import { useVultraStore } from "@/lib/store";
+import { useKillswitchStore } from "@/lib/store";
 
 interface ProfileModalProps {
   open: boolean;
@@ -12,7 +12,7 @@ interface ProfileModalProps {
 }
 
 export default function ProfileModal({ open, onClose, mandatory = false }: ProfileModalProps) {
-  const { userEmail, setUserEmail } = useVultraStore();
+  const { userEmail, setUserEmail } = useKillswitchStore();
   const [inputEmail, setInputEmail] = useState(userEmail || "");
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
@@ -152,7 +152,7 @@ export default function ProfileModal({ open, onClose, mandatory = false }: Profi
               value={inputEmail}
               onChange={e => { setInputEmail(e.target.value); setError(""); }}
               onKeyDown={e => e.key === "Enter" && handleSave()}
-              placeholder="admin@vultra-node.com"
+              placeholder="admin@killswitch.com"
               style={{
                 width: "100%", padding: "11px 14px", borderRadius: 9,
                 background: "rgba(255,255,255,0.04)",

@@ -12,7 +12,7 @@ interface ITieredCircuitBreaker {
 
 /**
  * @title  LiquidityVault
- * @notice Core vault for Vultra-Node intelligent liquidity protection.
+ * @notice Core vault for Killswitch-Node intelligent liquidity protection.
  *         Upgraded to support Tiered Circuit Breaker constraints and rate limits.
  */
 contract LiquidityVault is AccessControl, ReentrancyGuard {

@@ -1,12 +1,12 @@
 "use client";
 
-import { useVultraStore } from "@/lib/store";
+import { useKillswitchStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { TrendingUp, TrendingDown } from "lucide-react";
 
 export default function LiquidityLineChart() {
-  const { liquidityHistory } = useVultraStore();
+  const { liquidityHistory } = useKillswitchStore();
 
   const data = liquidityHistory.map(p => ({
     time: p.time,

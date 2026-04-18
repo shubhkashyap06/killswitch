@@ -33,7 +33,7 @@ describe("Tiered Circuit Breaker Architecture", function () {
 
         // 1. Deploy Mock Token
         const Token = await ethers.getContractFactory("MockERC20");
-        token = await Token.deploy("Vultra Token", "VLT");
+        token = await Token.deploy("Killswitch Token", "VLT");
 
         // 2. Deploy Circuit Breaker (UUPS)
         const CB = await ethers.getContractFactory("TieredCircuitBreaker");
@@ -64,7 +64,7 @@ describe("Tiered Circuit Breaker Architecture", function () {
         // EIP-712 Domain
         const network = await ethers.provider.getNetwork();
         domain = {
-            name: "VaultSentinel",
+            name: "Killswitch",
             version: "1",
             chainId: network.chainId,
             verifyingContract: consensus.target

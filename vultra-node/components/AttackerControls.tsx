@@ -1,12 +1,12 @@
 "use client";
 
-import { useVultraStore, AttackType } from "@/lib/store";
+import { useKillswitchStore, AttackType } from "@/lib/store";
 import { motion } from "framer-motion";
 import { TerminalSquare } from "lucide-react";
 import { useState, useRef } from "react";
 import { ethers } from "ethers";
 import VaultABI from "@/lib/abis/LiquidityVault.json";
-import TokenABI from "@/lib/abis/VultraToken.json";
+import TokenABI from "@/lib/abis/KillswitchToken.json";
 
 const VAULT_ADDRESS = process.env.NEXT_PUBLIC_VAULT_ADDRESS as string;
 const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS as string;
@@ -104,7 +104,7 @@ async function executeOnChainFreeze(reason: string, pushLog: Function) {
 
     // Force-sync the isFrozen state immediately via BroadcastChannel
     if (typeof window !== "undefined") {
-      const chan = new BroadcastChannel("vultra_ui_telemetry");
+      const chan = new BroadcastChannel("killswitch_ui_telemetry");
       chan.postMessage({ type: "FORCE_FREEZE", isFrozen: true });
       chan.close();
     }
@@ -121,7 +121,7 @@ async function executeOnChainFreeze(reason: string, pushLog: Function) {
 }
 
 export default function AttackerControls() {
-  const { pushAttackLog, isFrozen, increaseThreat, threatScore } = useVultraStore();
+  const { pushAttackLog, isFrozen, increaseThreat, threatScore } = useKillswitchStore();
   const [firing, setFiring] = useState<AttackType | null>(null);
   const localScore = useRef(threatScore);
   // Keep local ref current for accumulation

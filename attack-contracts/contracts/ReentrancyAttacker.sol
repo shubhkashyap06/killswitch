@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /**
  * @title  ReentrancyAttacker
- * @notice Simulates a rapid-drain ERC-20 attack against the Vultra LiquidityVault.
+ * @notice Simulates a rapid-drain ERC-20 attack against the Killswitch LiquidityVault.
  *         The vault uses ReentrancyGuard, so true reentrancy is blocked.
  *         This contract instead models the realistic threat: a malicious EOA
  *         contract that loops rapid micro-withdrawals to trigger the

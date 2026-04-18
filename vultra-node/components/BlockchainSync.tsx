@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useAccount } from "wagmi";
 import { ethers } from "ethers";
-import { useVultraStore } from "@/lib/store";
+import { useKillswitchStore } from "@/lib/store";
 import VaultABI from "@/lib/abis/LiquidityVault.json";
 
 const VAULT_ADDRESS = process.env.NEXT_PUBLIC_VAULT_ADDRESS as string;
@@ -35,7 +35,7 @@ export default function BlockchainSync() {
   // The dashboard guard reads from wagmi directly, but other components (Navbar,
   // ActionPanel) read from the store — keep them in sync without polling delay.
   useEffect(() => {
-    useVultraStore.setState({
+    useKillswitchStore.setState({
       isConnected: !!address,
       walletAddress: address ?? null,
     });
@@ -63,7 +63,7 @@ export default function BlockchainSync() {
         const newFrozen = Boolean(frozenRaw);
         const newBal    = Number(ethers.formatEther(typeof userBalRaw === "bigint" ? userBalRaw : BigInt(userBalRaw)));
 
-        useVultraStore.setState((state) => ({
+        useKillswitchStore.setState((state) => ({
           totalLiquidity:    newTotal,
           isFrozen:          newFrozen,
           userBalance:       newBal,
@@ -142,7 +142,7 @@ export default function BlockchainSync() {
           // ── DEPOSIT ──────────────────────────────────────────────────────
           if (topic === DEPOSIT_TOPIC) {
             const amount = Number(ethers.formatEther(parsed.args[1] as bigint));
-            useVultraStore.setState((state) => {
+            useKillswitchStore.setState((state) => {
               const newTotal = state.totalLiquidity + amount;
               return {
                 totalLiquidity: newTotal,
@@ -194,7 +194,7 @@ export default function BlockchainSync() {
               ? `⚠ Rapid drain #${count} — attacker: ${user.slice(0, 10)}…`
               : `On-chain Withdraw — ${user.slice(0, 10)}…`;
 
-            useVultraStore.setState((state) => {
+            useKillswitchStore.setState((state) => {
               const newTotal = Math.max(0, state.totalLiquidity - amount);
 
               // Bump threat score for attack transactions
@@ -249,7 +249,7 @@ export default function BlockchainSync() {
 
           // ── FREEZE ───────────────────────────────────────────────────────
           if (topic === FREEZE_TOPIC) {
-            useVultraStore.setState((state) => ({
+            useKillswitchStore.setState((state) => ({
               isFrozen:     true,
               systemStatus: "FROZEN",
               threatScore:  Math.max(state.threatScore, 80),
@@ -283,7 +283,7 @@ export default function BlockchainSync() {
 
           // ── UNFREEZE / EMERGENCY UNFREEZE ─────────────────────────────────
           if (topic === UNFREEZE_TOPIC || topic === EMERGENCY_TOPIC) {
-            useVultraStore.setState({
+            useKillswitchStore.setState({
               isFrozen:          false,
               systemStatus:      "NORMAL",
               frozenLiquidity:   0,

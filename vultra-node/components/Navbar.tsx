@@ -1,6 +1,6 @@
 "use client";
 
-import { useVultraStore } from "@/lib/store";
+import { useKillswitchStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, User, TrendingUp, TrendingDown } from "lucide-react";
 import ProfileModal from "@/components/ProfileModal";
@@ -10,7 +10,7 @@ import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { injected } from "wagmi/connectors";
 
 function useMarketTickers() {
-  const { totalLiquidity, availableLiquidity, threatScore, systemStatus } = useVultraStore();
+  const { totalLiquidity, availableLiquidity, threatScore, systemStatus } = useKillswitchStore();
   return [
     {
       name: "VAULT POOL",
@@ -52,7 +52,7 @@ function useMarketTickers() {
 }
 
 export default function Navbar() {
-  const { systemStatus, isFrozen, threatScore, userEmail } = useVultraStore();
+  const { systemStatus, isFrozen, threatScore, userEmail } = useKillswitchStore();
   const { isConnected } = useAccount();
   const [profileOpen, setProfileOpen] = useState(false);
   const tickers = useMarketTickers();
@@ -108,11 +108,11 @@ export default function Navbar() {
               transition={{ duration: 1.6, repeat: Infinity }}
               style={{ width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center" }}
             >
-              <img src="/logo.png" alt="Vultra Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+              <img src="/logo.png" alt="Killswitch Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
             </motion.div>
             <div>
               <div style={{ fontWeight: 800, fontSize: "0.98rem", letterSpacing: "-0.01em", lineHeight: 1.1, color: "var(--text-primary)" }}>
-                Vultra<span style={{ color: "var(--accent)" }}>Node</span>
+                Killswitch<span style={{ color: "var(--accent)" }}>Node</span>
               </div>
               <div style={{ fontSize: "0.58rem", color: "var(--text-muted)", letterSpacing: "0.14em", textTransform: "uppercase" }}>
                 Liquidity Guardian

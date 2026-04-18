@@ -1,6 +1,6 @@
 "use client";
 
-import { useVultraStore } from "@/lib/store";
+import { useKillswitchStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, ShieldCheck, Info, Info as InfoIcon, Bell } from "lucide-react";
 import type { AlertItem } from "@/lib/store";
@@ -19,7 +19,7 @@ function timeAgo(date: Date): string {
 }
 
 export default function AlertPanel() {
-  const { alerts } = useVultraStore();
+  const { alerts } = useKillswitchStore();
 
   return (
     <div className="glass-card" style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>

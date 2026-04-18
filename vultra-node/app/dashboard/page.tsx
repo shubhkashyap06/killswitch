@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
-import { useVultraStore } from "@/lib/store";
+import { useKillswitchStore } from "@/lib/store";
 import Navbar from "@/components/Navbar";
 import LiquidityCards from "@/components/LiquidityCards";
 import StatusAlertPanel from "@/components/StatusAlertPanel";

@@ -8,7 +8,7 @@ import { Providers } from "./providers";const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Vultra-Node | Intelligent Liquidity Protection",
+  title: "Killswitch-Node | Intelligent Liquidity Protection",
   description:
     "Web3 DeFi dashboard for intelligent liquidity protection, monitoring, and attack simulation.",
 };

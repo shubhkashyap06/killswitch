@@ -1,6 +1,6 @@
 "use client";
 
-import { useVultraStore } from "@/lib/store";
+import { useKillswitchStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowDownCircle,
@@ -53,7 +53,7 @@ function timeAgo(d: Date) {
 }
 
 export default function TransactionHistory() {
-  const { transactions } = useVultraStore();
+  const { transactions } = useKillswitchStore();
 
   return (
     <motion.div

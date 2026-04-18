@@ -1,11 +1,11 @@
 "use client";
 
-import { useVultraStore } from "@/lib/store";
+import { useKillswitchStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import { Unlock, Lock } from "lucide-react";
 
 export default function VestingSection() {
-  const { vestingProgress, vestingTotal, vestingUnlocked } = useVultraStore();
+  const { vestingProgress, vestingTotal, vestingUnlocked } = useKillswitchStore();
   const pct = vestingTotal > 0 ? Math.min(100, (vestingUnlocked / vestingTotal) * 100) : 0;
 
   function fmt(v: number) {

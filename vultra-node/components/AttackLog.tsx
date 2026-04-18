@@ -1,6 +1,6 @@
 "use client";
 
-import { useVultraStore } from "@/lib/store";
+import { useKillswitchStore } from "@/lib/store";
 import type { AttackLog as AttackLogType } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { Radio } from "lucide-react";
@@ -17,7 +17,7 @@ function fmtTime(d: Date) {
 }
 
 export default function AttackLog() {
-  const { attackLogs } = useVultraStore();
+  const { attackLogs } = useKillswitchStore();
 
   return (
     <motion.div
